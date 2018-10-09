@@ -1,10 +1,14 @@
 package conv;
 
 import java.io.*;
+import java.io.IOException;
 
 import javax.xml.parsers.*;
+import javax.xml.parsers.ParserConfigurationException;
 
 import org.w3c.dom.*;
+
+import org.xml.sax.SAXException;
 
 
 public class VOXml {
@@ -191,6 +195,137 @@ public class VOXml {
         FileReaderWritter.writeXMLFile(adfDoc, destination);
 
         System.out.println("End Conv: handleVOXml ");
+    }
+
+    public static void addLovDetails(String voPath, String bindingVO, String bindingAttr, String lovVO, String lovAttr) {
+        try {
+            File adfVO = new File(voPath);
+            DocumentBuilderFactory newDbFactory = DocumentBuilderFactory.newInstance();
+            newDbFactory.setValidating(false);
+            DocumentBuilder newDBuilder = newDbFactory.newDocumentBuilder();
+            Document adfDoc = newDBuilder.parse(adfVO);
+            Element ViewObjectAdf = adfDoc.getDocumentElement();
+            Element viewAccessor = adfDoc.createElement("ViewAccessor");
+            ViewObjectAdf.appendChild(viewAccessor);
+
+            Attr name = adfDoc.createAttribute("Name");
+            name.setValue(lovVO);
+            name.normalize();
+            viewAccessor.setAttributeNode(name);
+
+            Attr viewObjectName = adfDoc.createAttribute("ViewObjectName");
+            viewObjectName.setValue(lovVO);
+            viewObjectName.normalize();
+            viewAccessor.setAttributeNode(viewObjectName);
+
+            Attr rowLevelBinds = adfDoc.createAttribute("RowLevelBinds");
+            rowLevelBinds.setValue("true");
+            rowLevelBinds.normalize();
+            viewAccessor.setAttributeNode(rowLevelBinds);
+
+            Element listBinding = adfDoc.createElement("ListBinding");
+            ViewObjectAdf.appendChild(listBinding);
+
+            Attr listName = adfDoc.createAttribute("Name");
+            listName.setValue("LOV_" + bindingAttr);
+            listName.normalize();
+            listBinding.setAttributeNode(listName);
+
+            Attr listVOName = adfDoc.createAttribute("ListVOName");
+            listVOName.setValue(lovVO);
+            listVOName.normalize();
+            listBinding.setAttributeNode(listVOName);
+
+            Attr listRangeSize = adfDoc.createAttribute("ListRangeSize");
+            listRangeSize.setValue("-1");
+            listRangeSize.normalize();
+            listBinding.setAttributeNode(listRangeSize);
+
+            Attr nullValueFlag = adfDoc.createAttribute("NullValueFlag");
+            nullValueFlag.setValue("start");
+            nullValueFlag.normalize();
+            listBinding.setAttributeNode(nullValueFlag);
+
+            Attr mruCount = adfDoc.createAttribute("MRUCount");
+            mruCount.setValue("0");
+            mruCount.normalize();
+            listBinding.setAttributeNode(mruCount);
+
+            Element attrArray = adfDoc.createElement("AttrArray");
+            listBinding.appendChild(attrArray);
+
+            Attr attrArrayName = adfDoc.createAttribute("Name");
+            attrArrayName.setValue("AttrNames");
+            attrArrayName.normalize();
+            attrArray.setAttributeNode(attrArrayName);
+
+            Element item = adfDoc.createElement("Item");
+            attrArray.appendChild(item);
+
+            Attr itemValue = adfDoc.createAttribute("Value");
+            itemValue.setValue(bindingAttr);
+            itemValue.normalize();
+            item.setAttributeNode(itemValue);
+
+            Element attrArray1 = adfDoc.createElement("AttrArray");
+            listBinding.appendChild(attrArray1);
+
+            Attr attrExpressions = adfDoc.createAttribute("Name");
+            attrExpressions.setValue("AttrExpressions");
+            attrExpressions.normalize();
+            attrArray1.setAttributeNode(attrExpressions);
+
+            Element attrArray2 = adfDoc.createElement("AttrArray");
+            listBinding.appendChild(attrArray2);
+
+            Attr listAttrNames = adfDoc.createAttribute("Name");
+            listAttrNames.setValue("ListAttrNames");
+            listAttrNames.normalize();
+            attrArray2.setAttributeNode(listAttrNames);
+
+            Element item1 = adfDoc.createElement("Item");
+            attrArray2.appendChild(item1);
+
+            Attr itemValue1 = adfDoc.createAttribute("Value");
+            itemValue1.setValue(lovAttr);
+            itemValue1.normalize();
+            item1.setAttributeNode(itemValue1);
+
+            Element attrArray3 = adfDoc.createElement("AttrArray");
+            listBinding.appendChild(attrArray3);
+
+            Attr listDisplayAttrNames = adfDoc.createAttribute("Name");
+            listDisplayAttrNames.setValue("ListDisplayAttrNames");
+            listDisplayAttrNames.normalize();
+            attrArray3.setAttributeNode(listDisplayAttrNames);
+
+            Element item2 = adfDoc.createElement("Item");
+            attrArray3.appendChild(item2);
+
+            Attr itemValue2 = adfDoc.createAttribute("Value");
+            itemValue2.setValue(lovAttr);
+            itemValue2.normalize();
+            item2.setAttributeNode(itemValue2);
+
+            Element displayCriteria = adfDoc.createElement("DisplayCriteria");
+            listBinding.appendChild(displayCriteria);
+
+            // String destination = FileReaderWritter.getModelDestinationPath(path, app, dest, src);
+
+            FileReaderWritter.writeXMLFile(adfDoc, voPath);
+
+        } catch (IOException ioe) {
+            // TODO: Add catch code
+            ioe.printStackTrace();
+        } catch (SAXException saxe) {
+            // TODO: Add catch code
+            saxe.printStackTrace();
+        } catch (ParserConfigurationException pce) {
+            // TODO: Add catch code
+            pce.printStackTrace();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     /**

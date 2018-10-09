@@ -2,6 +2,9 @@ package conv;
 
 import java.io.*;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import javax.xml.parsers.*;
 
 import org.w3c.dom.*;
@@ -53,13 +56,14 @@ public class Main {
     private String src;
     private String dest;
     private String repo;
+    private Map filePaths = new HashMap();
 
     /**
      * Sample code for testing
      * @param args
      */
     public static void main(String[] args) {
-        String app = "eaf"; // change here
+        String app = "hello"; // change here
         String ret = startConverter(app);
         System.out.println(ret);
     }
@@ -171,18 +175,27 @@ public class Main {
         String type = root.getTagName();
         if (type.equals("AppModule"))
             AMXml.handleAMXml(path, this.getApp(), this.getDest(), this.getRepo(), this.getSrc());
-        else if (type.equals("ViewObject"))
+        else if (type.equals("ViewObject")) {
             VOXml.handleVOXml(path, this.getApp(), this.getDest(), this.getRepo(), this.getSrc());
-        else if (type.equals("Entity"))
+            String newPath = path;
+            newPath = newPath.replace(src + FileReaderWritter.getSeparator(), "");
+            String Dest =
+                dest + FileReaderWritter.getSeparator() + app + FileReaderWritter.getSeparator() + "Model" +
+                FileReaderWritter.getSeparator() + "src" + FileReaderWritter.getSeparator() + "model" +
+                FileReaderWritter.getSeparator() + newPath;
+
+            System.out.println(Dest);
+            //System.out.println(this.getDest()+"\\"+"Model\\"+);
+            filePaths.put(root.getAttribute("Name"), Dest);
+        } else if (type.equals("Entity"))
             EOXml.handleEOXml(path, this.getApp(), this.getDest(), this.getRepo(), this.getSrc());
         else if (type.equals("Association"))
             AOXml.handleAOXml(path, this.getApp(), this.getDest(), this.getRepo(), this.getSrc());
         else if (type.contains("ViewLink"))
             VLXml.handleVLXml(path, this.getApp(), this.getDest(), this.getRepo(), this.getSrc());
         else if (type.contains("page"))
-            JSFGen.handlePage(path, this.getApp(), this.getDest(), this.getRepo());
-        else if (path.substring(path.lastIndexOf(FileReaderWritter.getSeparator()) + 1).contains("server.xml") ||
-                 path.contains("bc4j.xcfg"))
+            JSFGen.handlePage(path, this.getApp(), this.getDest(), this.getRepo(), this.getSrc(), filePaths);
+        else if (path.substring(path.lastIndexOf(FileReaderWritter.getSeparator()) + 1).contains("server.xml"))
             ; // do nothing
         else
             FileReaderWritter.unalteredFile(path, this.getApp(), this.getDest(), this.getSrc());

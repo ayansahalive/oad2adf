@@ -1,19 +1,9 @@
 package conv;
 
 import java.io.File;
-import java.io.StringWriter;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-
-import javax.xml.transform.OutputKeys;
-import javax.xml.transform.Transformer;
-
-import javax.xml.transform.TransformerFactory;
-
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
 
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
@@ -28,7 +18,7 @@ public class PageDefXml {
     }
 
     public static void handlePageDef(String pgName, String voName, String attrName, String dest, String app,
-                                     String amDef, String bindingType) {
+                                     String amDef, String bindingType, String pickListAttr, String pickListVO) {
         try {
             DocumentBuilderFactory newDbFactory = DocumentBuilderFactory.newInstance();
             newDbFactory.setValidating(false);
@@ -56,7 +46,7 @@ public class PageDefXml {
             for (int i = 0; i < nodes.getLength(); i++) {
                 Node node = nodes.item(i);
                 if (node != null && node.getNodeName() != null) {
-                    if (node.getNodeName().equals("executables") && voName != null) {
+                    if (node.getNodeName().equals("executables") && (voName != null || pickListVO != null)) {
                         NodeList nodeList = node.getChildNodes();
                         Node tempNode = getNode(nodeList, "iterator");
                         String bindValue = null;
@@ -71,12 +61,17 @@ public class PageDefXml {
                                 }
                             }
                         }
-                        if (bindValue == null || !bindValue.equals(voName)) {
+                        if (bindValue == null || (voName != null && !bindValue.equals(voName)) ||
+                            (voName == null || !bindValue.equals(pickListVO))) {
                             Element iteratorDtls = pageDefDoc.createElement("iterator");
                             node.appendChild(iteratorDtls);
 
                             Attr binds = pageDefDoc.createAttribute("Binds");
-                            binds.setValue(voName);
+                            if (voName != null) {
+                                binds.setValue(voName);
+                            } else {
+                                binds.setValue(pickListVO);
+                            }
                             binds.normalize();
                             iteratorDtls.setAttributeNode(binds);
 
@@ -91,7 +86,11 @@ public class PageDefXml {
                             iteratorDtls.setAttributeNode(dataControl);
 
                             Attr id = pageDefDoc.createAttribute("id");
-                            id.setValue(voName + "Iterator");
+                            if (voName != null) {
+                                id.setValue(voName + "Iterator");
+                            } else {
+                                id.setValue(pickListVO + "Iterator");
+                            }
                             id.normalize();
                             iteratorDtls.setAttributeNode(id);
                         }
@@ -167,7 +166,7 @@ public class PageDefXml {
                                                 "DataControl_dataProvider_" + attrName + "_result");
                             returnName.normalize();
                             methodAction.setAttributeNode(returnName);
-                        } else if (bindingType != null && bindingType.equals("list")) {
+                        } else if (bindingType != null && bindingType.equals("listOfValues")) {
                             Element list = pageDefDoc.createElement("listOfValues");
                             node.appendChild(list);
 
@@ -191,15 +190,109 @@ public class PageDefXml {
                             uses.normalize();
                             list.setAttributeNode(uses);
 
-//                            Attr dtSupportsMRU = pageDefDoc.createAttribute("DTSupportsMRU");
-//                            dtSupportsMRU.setValue("true");
-//                            dtSupportsMRU.normalize();
-//                            list.setAttributeNode(dtSupportsMRU);
-//
-//                            Attr selectItemValueMode = pageDefDoc.createAttribute("SelectItemValueMode");
-//                            selectItemValueMode.setValue("ListObject");
-//                            selectItemValueMode.normalize();
-//                            list.setAttributeNode(selectItemValueMode);
+                            //                            Attr dtSupportsMRU = pageDefDoc.createAttribute("DTSupportsMRU");
+                            //                            dtSupportsMRU.setValue("true");
+                            //                            dtSupportsMRU.normalize();
+                            //                            list.setAttributeNode(dtSupportsMRU);
+                            //
+                            //                            Attr selectItemValueMode = pageDefDoc.createAttribute("SelectItemValueMode");
+                            //                            selectItemValueMode.setValue("ListObject");
+                            //                            selectItemValueMode.normalize();
+                            //                            list.setAttributeNode(selectItemValueMode);
+                        } else if (bindingType != null && bindingType.equals("list")) {
+                            Element list = pageDefDoc.createElement("list");
+                            node.appendChild(list);
+
+                            Attr id = pageDefDoc.createAttribute("id");
+                            if (attrName != null) {
+                                id.setValue(attrName);
+                            } else {
+                                id.setValue(pickListVO);
+                            }
+                            id.normalize();
+                            list.setAttributeNode(id);
+
+
+                            if (attrName == null && voName == null) {
+                                Attr listOperMode = pageDefDoc.createAttribute("ListOperMode");
+                                listOperMode.setValue("navigation");
+                                listOperMode.normalize();
+                                list.setAttributeNode(listOperMode);
+
+                                Attr listIter = pageDefDoc.createAttribute("ListIter");
+                                listIter.setValue(pickListVO + "Iterator");
+                                listIter.normalize();
+                                list.setAttributeNode(listIter);
+                            } else {
+                                Attr staticList = pageDefDoc.createAttribute("StaticList");
+                                staticList.setValue("false");
+                                staticList.normalize();
+                                list.setAttributeNode(staticList);
+
+                                Attr uses = pageDefDoc.createAttribute("Uses");
+                                uses.setValue("LOV_" + attrName);
+                                uses.normalize();
+                                list.setAttributeNode(uses);
+
+                            }
+
+                            Attr iterBinding = pageDefDoc.createAttribute("IterBinding");
+                            if (voName != null) {
+                                iterBinding.setValue(voName + "Iterator");
+                            } else {
+                                iterBinding.setValue(pickListVO + "Iterator");
+                            }
+                            iterBinding.normalize();
+                            list.setAttributeNode(iterBinding);
+
+                            Attr dtSupportsMRU = pageDefDoc.createAttribute("DTSupportsMRU");
+                            dtSupportsMRU.setValue("true");
+                            dtSupportsMRU.normalize();
+                            list.setAttributeNode(dtSupportsMRU);
+
+                            Attr selectItemValueMode = pageDefDoc.createAttribute("SelectItemValueMode");
+                            selectItemValueMode.setValue("ListObject");
+                            selectItemValueMode.normalize();
+                            list.setAttributeNode(selectItemValueMode);
+
+                            if (voName == null) {
+                                Element attrNames = pageDefDoc.createElement("AttrNames");
+                                list.appendChild(attrNames);
+
+                                Element item = pageDefDoc.createElement("Item");
+                                attrNames.appendChild(item);
+
+                                Attr value = pageDefDoc.createAttribute("Value");
+                                value.setValue(pickListAttr);
+                                value.normalize();
+                                item.setAttributeNode(value);
+                            }
+                        } else if (bindingType != null && bindingType.equals("tree")) {
+                            Element tree = pageDefDoc.createElement("tree");
+                            node.appendChild(tree);
+
+                            Attr iterBinding = pageDefDoc.createAttribute("IterBinding");
+                            iterBinding.setValue(voName + "Iterator");
+                            iterBinding.normalize();
+                            tree.setAttributeNode(iterBinding);
+
+                            Attr id = pageDefDoc.createAttribute("id");
+                            id.setValue(voName);
+                            id.normalize();
+                            tree.setAttributeNode(id);
+                            
+                            Element nodeDefinition = pageDefDoc.createElement("nodeDefinition");
+                            tree.appendChild(nodeDefinition);
+                            
+                            Attr defName = pageDefDoc.createAttribute("DefName");
+                            defName.setValue(voName);
+                            defName.normalize();
+                            nodeDefinition.setAttributeNode(defName);
+
+                            Attr name = pageDefDoc.createAttribute("Name");
+                            name.setValue(voName);
+                            name.normalize();
+                            nodeDefinition.setAttributeNode(name);
                         }
                     }
                 }

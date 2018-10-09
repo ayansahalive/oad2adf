@@ -49,7 +49,7 @@ public class AMClientInterface {
                                     Node currentAtt = attrs.item(j);
                                     if (currentAtt.getNodeName().equals("ComponentClass")) {
                                         implClassPkg =
-                                            DirCreator.changedClassPath(currentAtt.getNodeValue()); // model.xxnuc.oracle.apps.inv.hello.server.HelloAMImpl
+                                            DirCreator.changedModelClassPath(currentAtt.getNodeValue()); // model.xxnuc.oracle.apps.inv.hello.server.HelloAMImpl
                                     }
                                 }
                                 // handle Impl add \Model\src\ to pathOriginal
@@ -85,7 +85,7 @@ public class AMClientInterface {
         String amName = name.replace(".java", "");
 
         JavaCodeExtractor obj = new JavaCodeExtractor();
-        Vector vec = obj.start(destination);
+        List vec = obj.start(destination);
 
         Vector intfc = new Vector();
         int countAdded = 0;

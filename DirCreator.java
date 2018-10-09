@@ -424,12 +424,12 @@ public class DirCreator {
         String imports = "import oracle.jbo.JboException; \n";
         String str = FileReaderWritter.getCharContents(path);
 
-        String temp = str.substring(str.indexOf("package"), str.indexOf("{"));
-        String top = temp.substring(0, temp.lastIndexOf(";") + 1);
-        String middle = temp.substring(temp.lastIndexOf(";"));
-        String bottom = str.substring(str.indexOf("{"));
-        top = top + imports;
-        str = top + middle + bottom;
+//        String temp = str.substring(str.indexOf("package"), str.indexOf("{"));
+//        String top = temp.substring(0, temp.lastIndexOf(";") + 1);
+//        String middle = temp.substring(temp.lastIndexOf(";"));
+//        String bottom = str.substring(str.indexOf("{"));
+//        top = top + imports;
+//        str = top + middle + bottom;
 
         /// replacements =====================================================
         str = str.replace("OADBTransaction", "DBTransaction");
