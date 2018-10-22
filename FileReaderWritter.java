@@ -91,10 +91,11 @@ public class FileReaderWritter {
 
         String dest = Dest.substring(0, Dest.lastIndexOf(getSeparator()));
         new File(dest).mkdirs();
-
+        //doc.setXmlStandalone(true);
         Transformer transformer = TransformerFactory.newInstance().newTransformer();
         transformer.setOutputProperty(OutputKeys.INDENT, "yes");
         transformer.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
+        transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
         DocumentType doctype = doc.getDoctype();
         if (null != doctype && null != doctype.getSystemId())
             transformer.setOutputProperty(OutputKeys.DOCTYPE_SYSTEM, doctype.getSystemId());

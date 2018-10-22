@@ -197,135 +197,151 @@ public class VOXml {
         System.out.println("End Conv: handleVOXml ");
     }
 
-    public static void addLovDetails(String voPath, String bindingVO, String bindingAttr, String lovVO, String lovAttr) {
-        try {
-            File adfVO = new File(voPath);
-            DocumentBuilderFactory newDbFactory = DocumentBuilderFactory.newInstance();
-            newDbFactory.setValidating(false);
-            DocumentBuilder newDBuilder = newDbFactory.newDocumentBuilder();
-            Document adfDoc = newDBuilder.parse(adfVO);
-            Element ViewObjectAdf = adfDoc.getDocumentElement();
-            Element viewAccessor = adfDoc.createElement("ViewAccessor");
-            ViewObjectAdf.appendChild(viewAccessor);
+    public static void addLovDetails(String voPath, String bindingAttr, String lovVO, String lovAttr,
+                                     String controlTypeVal) throws Exception {
+        File adfVO = new File(voPath);
+        DocumentBuilderFactory newDbFactory = DocumentBuilderFactory.newInstance();
+        newDbFactory.setValidating(false);
+        DocumentBuilder newDBuilder = newDbFactory.newDocumentBuilder();
+        Document adfDoc = newDBuilder.parse(adfVO);
+        Element ViewObjectAdf = adfDoc.getDocumentElement();
+        Element viewAccessor = adfDoc.createElement("ViewAccessor");
+        ViewObjectAdf.appendChild(viewAccessor);
 
-            Attr name = adfDoc.createAttribute("Name");
-            name.setValue(lovVO);
-            name.normalize();
-            viewAccessor.setAttributeNode(name);
+        Attr name = adfDoc.createAttribute("Name");
+        name.setValue(lovVO);
+        name.normalize();
+        viewAccessor.setAttributeNode(name);
 
-            Attr viewObjectName = adfDoc.createAttribute("ViewObjectName");
-            viewObjectName.setValue(lovVO);
-            viewObjectName.normalize();
-            viewAccessor.setAttributeNode(viewObjectName);
+        Attr viewObjectName = adfDoc.createAttribute("ViewObjectName");
+        viewObjectName.setValue(lovVO);
+        viewObjectName.normalize();
+        viewAccessor.setAttributeNode(viewObjectName);
 
-            Attr rowLevelBinds = adfDoc.createAttribute("RowLevelBinds");
-            rowLevelBinds.setValue("true");
-            rowLevelBinds.normalize();
-            viewAccessor.setAttributeNode(rowLevelBinds);
+        Attr rowLevelBinds = adfDoc.createAttribute("RowLevelBinds");
+        rowLevelBinds.setValue("true");
+        rowLevelBinds.normalize();
+        viewAccessor.setAttributeNode(rowLevelBinds);
 
-            Element listBinding = adfDoc.createElement("ListBinding");
-            ViewObjectAdf.appendChild(listBinding);
+        Element listBinding = adfDoc.createElement("ListBinding");
+        ViewObjectAdf.appendChild(listBinding);
 
-            Attr listName = adfDoc.createAttribute("Name");
-            listName.setValue("LOV_" + bindingAttr);
-            listName.normalize();
-            listBinding.setAttributeNode(listName);
+        Attr listName = adfDoc.createAttribute("Name");
+        listName.setValue("LOV_" + bindingAttr);
+        listName.normalize();
+        listBinding.setAttributeNode(listName);
 
-            Attr listVOName = adfDoc.createAttribute("ListVOName");
-            listVOName.setValue(lovVO);
-            listVOName.normalize();
-            listBinding.setAttributeNode(listVOName);
+        Attr listVOName = adfDoc.createAttribute("ListVOName");
+        listVOName.setValue(lovVO);
+        listVOName.normalize();
+        listBinding.setAttributeNode(listVOName);
 
-            Attr listRangeSize = adfDoc.createAttribute("ListRangeSize");
-            listRangeSize.setValue("-1");
-            listRangeSize.normalize();
-            listBinding.setAttributeNode(listRangeSize);
+        Attr listRangeSize = adfDoc.createAttribute("ListRangeSize");
+        listRangeSize.setValue("-1");
+        listRangeSize.normalize();
+        listBinding.setAttributeNode(listRangeSize);
 
-            Attr nullValueFlag = adfDoc.createAttribute("NullValueFlag");
-            nullValueFlag.setValue("start");
-            nullValueFlag.normalize();
-            listBinding.setAttributeNode(nullValueFlag);
+        Attr nullValueFlag = adfDoc.createAttribute("NullValueFlag");
+        nullValueFlag.setValue("start");
+        nullValueFlag.normalize();
+        listBinding.setAttributeNode(nullValueFlag);
 
-            Attr mruCount = adfDoc.createAttribute("MRUCount");
-            mruCount.setValue("0");
-            mruCount.normalize();
-            listBinding.setAttributeNode(mruCount);
+        Attr mruCount = adfDoc.createAttribute("MRUCount");
+        mruCount.setValue("0");
+        mruCount.normalize();
+        listBinding.setAttributeNode(mruCount);
 
-            Element attrArray = adfDoc.createElement("AttrArray");
-            listBinding.appendChild(attrArray);
+        Element attrArray = adfDoc.createElement("AttrArray");
+        listBinding.appendChild(attrArray);
 
-            Attr attrArrayName = adfDoc.createAttribute("Name");
-            attrArrayName.setValue("AttrNames");
-            attrArrayName.normalize();
-            attrArray.setAttributeNode(attrArrayName);
+        Attr attrArrayName = adfDoc.createAttribute("Name");
+        attrArrayName.setValue("AttrNames");
+        attrArrayName.normalize();
+        attrArray.setAttributeNode(attrArrayName);
 
-            Element item = adfDoc.createElement("Item");
-            attrArray.appendChild(item);
+        Element item = adfDoc.createElement("Item");
+        attrArray.appendChild(item);
 
-            Attr itemValue = adfDoc.createAttribute("Value");
-            itemValue.setValue(bindingAttr);
-            itemValue.normalize();
-            item.setAttributeNode(itemValue);
+        Attr itemValue = adfDoc.createAttribute("Value");
+        itemValue.setValue(bindingAttr);
+        itemValue.normalize();
+        item.setAttributeNode(itemValue);
 
-            Element attrArray1 = adfDoc.createElement("AttrArray");
-            listBinding.appendChild(attrArray1);
+        Element attrArray1 = adfDoc.createElement("AttrArray");
+        listBinding.appendChild(attrArray1);
 
-            Attr attrExpressions = adfDoc.createAttribute("Name");
-            attrExpressions.setValue("AttrExpressions");
-            attrExpressions.normalize();
-            attrArray1.setAttributeNode(attrExpressions);
+        Attr attrExpressions = adfDoc.createAttribute("Name");
+        attrExpressions.setValue("AttrExpressions");
+        attrExpressions.normalize();
+        attrArray1.setAttributeNode(attrExpressions);
 
-            Element attrArray2 = adfDoc.createElement("AttrArray");
-            listBinding.appendChild(attrArray2);
+        Element attrArray2 = adfDoc.createElement("AttrArray");
+        listBinding.appendChild(attrArray2);
 
-            Attr listAttrNames = adfDoc.createAttribute("Name");
-            listAttrNames.setValue("ListAttrNames");
-            listAttrNames.normalize();
-            attrArray2.setAttributeNode(listAttrNames);
+        Attr listAttrNames = adfDoc.createAttribute("Name");
+        listAttrNames.setValue("ListAttrNames");
+        listAttrNames.normalize();
+        attrArray2.setAttributeNode(listAttrNames);
 
-            Element item1 = adfDoc.createElement("Item");
-            attrArray2.appendChild(item1);
+        Element item1 = adfDoc.createElement("Item");
+        attrArray2.appendChild(item1);
 
-            Attr itemValue1 = adfDoc.createAttribute("Value");
-            itemValue1.setValue(lovAttr);
-            itemValue1.normalize();
-            item1.setAttributeNode(itemValue1);
+        Attr itemValue1 = adfDoc.createAttribute("Value");
+        itemValue1.setValue(lovAttr);
+        itemValue1.normalize();
+        item1.setAttributeNode(itemValue1);
 
-            Element attrArray3 = adfDoc.createElement("AttrArray");
-            listBinding.appendChild(attrArray3);
+        Element attrArray3 = adfDoc.createElement("AttrArray");
+        listBinding.appendChild(attrArray3);
 
-            Attr listDisplayAttrNames = adfDoc.createAttribute("Name");
-            listDisplayAttrNames.setValue("ListDisplayAttrNames");
-            listDisplayAttrNames.normalize();
-            attrArray3.setAttributeNode(listDisplayAttrNames);
+        Attr listDisplayAttrNames = adfDoc.createAttribute("Name");
+        listDisplayAttrNames.setValue("ListDisplayAttrNames");
+        listDisplayAttrNames.normalize();
+        attrArray3.setAttributeNode(listDisplayAttrNames);
 
-            Element item2 = adfDoc.createElement("Item");
-            attrArray3.appendChild(item2);
+        Element item2 = adfDoc.createElement("Item");
+        attrArray3.appendChild(item2);
 
-            Attr itemValue2 = adfDoc.createAttribute("Value");
-            itemValue2.setValue(lovAttr);
-            itemValue2.normalize();
-            item2.setAttributeNode(itemValue2);
+        Attr itemValue2 = adfDoc.createAttribute("Value");
+        itemValue2.setValue(lovAttr);
+        itemValue2.normalize();
+        item2.setAttributeNode(itemValue2);
 
-            Element displayCriteria = adfDoc.createElement("DisplayCriteria");
-            listBinding.appendChild(displayCriteria);
+        Element displayCriteria = adfDoc.createElement("DisplayCriteria");
+        listBinding.appendChild(displayCriteria);
 
-            // String destination = FileReaderWritter.getModelDestinationPath(path, app, dest, src);
+        NodeList childNodeList = ViewObjectAdf.getChildNodes();
+        for (int i = 0; i < childNodeList.getLength(); i++) {
+            Node childNode = childNodeList.item(i);
+            if (childNode.getNodeName().equals("ViewAttribute")) {
+                NamedNodeMap namedNodeMap = childNode.getAttributes();
+                for (int j = 0; j < namedNodeMap.getLength(); j++) {
+                    Node attrNode = namedNodeMap.item(j);
+                    if (attrNode.getNodeName().equals("Name")) {
+                        String attrName = attrNode.getNodeValue();
+                        if (attrName != null && attrName.equals("bindingAttr")) {
+                            Element propertiesNode = adfDoc.createElement("Properties");
+                            childNode.appendChild(propertiesNode);
 
-            FileReaderWritter.writeXMLFile(adfDoc, voPath);
+                            Element schemaBasedPropertiesNode = adfDoc.createElement("SchemaBasedProperties");
+                            propertiesNode.appendChild(schemaBasedPropertiesNode);
 
-        } catch (IOException ioe) {
-            // TODO: Add catch code
-            ioe.printStackTrace();
-        } catch (SAXException saxe) {
-            // TODO: Add catch code
-            saxe.printStackTrace();
-        } catch (ParserConfigurationException pce) {
-            // TODO: Add catch code
-            pce.printStackTrace();
-        } catch (Exception e) {
-            e.printStackTrace();
+                            Element controlTypeNode = adfDoc.createElement("CONTROLTYPE");
+                            schemaBasedPropertiesNode.appendChild(controlTypeNode);
+
+                            Attr controlTypeValueAttr = adfDoc.createAttribute("Value");
+                            controlTypeValueAttr.setValue(controlTypeVal);
+                            controlTypeValueAttr.normalize();
+                            controlTypeNode.setAttributeNode(controlTypeValueAttr);
+                        }
+                    }
+                }
+            }
         }
+
+        // String destination = FileReaderWritter.getModelDestinationPath(path, app, dest, src);
+
+        FileReaderWritter.writeXMLFile(adfDoc, voPath);
     }
 
     /**

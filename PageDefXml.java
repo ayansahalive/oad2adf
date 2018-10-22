@@ -2,6 +2,8 @@ package conv;
 
 import java.io.File;
 
+import java.util.List;
+
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
@@ -17,8 +19,9 @@ public class PageDefXml {
         super();
     }
 
-    public static void handlePageDef(String pgName, String voName, String attrName, String dest, String app,
-                                     String amDef, String bindingType, String pickListAttr, String pickListVO) {
+    public static void handlePageDef(String pgName, String voName, Object attrName, String dest, String app,
+                                     String amDef, String bindingType, String pickListAttr, String pickListVO,
+                                     String voPath) {
         try {
             DocumentBuilderFactory newDbFactory = DocumentBuilderFactory.newInstance();
             newDbFactory.setValidating(false);
@@ -105,7 +108,7 @@ public class PageDefXml {
                             attributeValues.setAttributeNode(iterBinding);
 
                             Attr id = pageDefDoc.createAttribute("id");
-                            id.setValue(attrName);
+                            id.setValue((String) attrName);
                             id.normalize();
                             attributeValues.setAttributeNode(id);
 
@@ -116,7 +119,7 @@ public class PageDefXml {
                             attrNames.appendChild(item);
 
                             Attr value = pageDefDoc.createAttribute("Value");
-                            value.setValue(attrName);
+                            value.setValue((String) attrName);
                             value.normalize();
                             item.setAttributeNode(value);
                         } else if (bindingType != null && bindingType.equals("invokeMethod")) {
@@ -124,7 +127,7 @@ public class PageDefXml {
                             node.appendChild(methodAction);
 
                             Attr id = pageDefDoc.createAttribute("id");
-                            id.setValue(attrName);
+                            id.setValue((String) attrName);
                             id.normalize();
                             methodAction.setAttributeNode(id);
 
@@ -139,7 +142,7 @@ public class PageDefXml {
                             methodAction.setAttributeNode(action);
 
                             Attr methodName = pageDefDoc.createAttribute("MethodName");
-                            methodName.setValue(attrName);
+                            methodName.setValue((String) attrName);
                             methodName.normalize();
                             methodAction.setAttributeNode(methodName);
 
@@ -171,7 +174,7 @@ public class PageDefXml {
                             node.appendChild(list);
 
                             Attr id = pageDefDoc.createAttribute("id");
-                            id.setValue(attrName);
+                            id.setValue((String) attrName);
                             id.normalize();
                             list.setAttributeNode(id);
 
@@ -205,7 +208,7 @@ public class PageDefXml {
 
                             Attr id = pageDefDoc.createAttribute("id");
                             if (attrName != null) {
-                                id.setValue(attrName);
+                                id.setValue((String) attrName);
                             } else {
                                 id.setValue(pickListVO);
                             }
@@ -268,6 +271,15 @@ public class PageDefXml {
                                 item.setAttributeNode(value);
                             }
                         } else if (bindingType != null && bindingType.equals("tree")) {
+                            if (voPath != null) {
+                                String removalPath =
+                                    dest + FileReaderWritter.getSeparator() + app + FileReaderWritter.getSeparator() +
+                                    "Model" + FileReaderWritter.getSeparator() + "src" +
+                                    FileReaderWritter.getSeparator();
+                                voPath = voPath.substring(removalPath.length());
+                                voPath = voPath.substring(0, voPath.indexOf("."));
+                                voPath = voPath.replaceAll(FileReaderWritter.getSeparator(), ".");
+                            } 
                             Element tree = pageDefDoc.createElement("tree");
                             node.appendChild(tree);
 
@@ -280,12 +292,12 @@ public class PageDefXml {
                             id.setValue(voName);
                             id.normalize();
                             tree.setAttributeNode(id);
-                            
+
                             Element nodeDefinition = pageDefDoc.createElement("nodeDefinition");
                             tree.appendChild(nodeDefinition);
-                            
+
                             Attr defName = pageDefDoc.createAttribute("DefName");
-                            defName.setValue(voName);
+                            defName.setValue(voPath);
                             defName.normalize();
                             nodeDefinition.setAttributeNode(defName);
 
@@ -293,6 +305,22 @@ public class PageDefXml {
                             name.setValue(voName);
                             name.normalize();
                             nodeDefinition.setAttributeNode(name);
+
+                            List<String> attrList = (List<String>) attrName;
+                            if (attrList.size() > 0) {
+                                Element attrNames = pageDefDoc.createElement("AttrNames");
+                                nodeDefinition.appendChild(attrNames);
+
+                                for (String attrStr : attrList) {
+                                    Element item = pageDefDoc.createElement("Item");
+                                    attrNames.appendChild(item);
+
+                                    Attr attrValue = pageDefDoc.createAttribute("Value");
+                                    attrValue.setValue(attrStr);
+                                    attrValue.normalize();
+                                    item.setAttributeNode(attrValue);
+                                }
+                            }
                         }
                     }
                 }

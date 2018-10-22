@@ -370,14 +370,14 @@ public class DirCreator {
 
         str = str.replace("import oracle.apps.fnd.framework.OAViewObject;", "import oracle.jbo.ViewObject;");
         str = str.replace("import oracle.apps.fnd.framework.OAFwkConstants;", "");
-        str = str.replace("import oracle.apps.fnd.framework.OAException;", "");
+       // str = str.replace("import oracle.apps.fnd.framework.OAException;", "");
         str = str.replace("import oracle.apps.fnd.common.MessageToken;", "");
         str = str.replace("com.sun.java.util.collections", "java.util");
         str =
             str.replace("import oracle.apps.fnd.framework.server.OADBTransaction;",
                         "import oracle.jbo.server.DBTransaction;");
         str = str.replace("import oracle.apps.fnd.framework.OARow;", "import oracle.jbo.Row;");
-
+        str = str.replace("import oracle.apps.fnd.framework.OAException;", "import oracle.jbo.JboException;");
         try {
             String pkg = str.substring(str.indexOf("package"), str.indexOf(";")).trim();
             pkg = pkg.replace("package ", "");
@@ -432,12 +432,13 @@ public class DirCreator {
         //        str = top + middle + bottom;
 
         /// replacements =====================================================
+        str = str.replace("OAException", "JboException");
         str = str.replace("OADBTransaction", "DBTransaction");
         str = str.replace("getOADBTransaction", "getDBTransaction");
         str = str.replace("OAViewObject", "ViewObject");
         str = str.replace("OARow", "Row");
         //// =================
-
+    
         FileReaderWritter.writeFile(str, path);
     }
 
@@ -453,7 +454,7 @@ public class DirCreator {
 
         //        str.replace("OAAddTableRowBean","");
         //        str.replace("OAAdvancedSearchBean","");
-        //        str.replace("OAAdvancedTableBean","");
+        str.replace("OAAdvancedTableBean","RichTable");
         //        str.replace("OAApplicationSwitcherBean","");
         //        str.replace("OAAttachmentImageBean","");
         //        str.replace("OAAttachmentTableBean","");

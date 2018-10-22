@@ -221,7 +221,11 @@ public class BeanGen {
             else if (line != null && line.contains("webBean.findChildRecursive(\"")) {
                 String[] s = line.split("webBean.findChildRecursive");
                 String tempStr = s[1].substring(2, s[1].indexOf("\"", 2));
-                line = s[0] + "get" + tempStr + "().getValue()" + s[1].substring(s[1].indexOf(")") + 1);
+                line = s[0] + "get" + tempStr + "()" + s[1].substring(s[1].indexOf(")") + 1);
+            } else if (line != null && line.contains("webBean.findIndexedChildRecursive(\"")) {
+                String[] s = line.split("webBean.findIndexedChildRecursive");
+                String tempStr = s[1].substring(2, s[1].indexOf("\"", 2));
+                line = s[0] + "get" + tempStr + "()" + s[1].substring(s[1].indexOf(")") + 1);
             }
         }
         System.out.println(ret);
@@ -234,6 +238,7 @@ public class BeanGen {
         jsfStr = jsfStr + ret + "}";
         System.out.println("jsfBean Path::::" + jsfBeanPath);
         FileReaderWritter.writeFile(jsfStr, jsfBeanPath);
+        DirCreator.WebBeanReplacements(jsfBeanPath);
         //        } catch (IOException ioe) {
         //            // TODO: Add catch code
         //            ioe.printStackTrace();

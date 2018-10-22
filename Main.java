@@ -105,6 +105,7 @@ public class Main {
                 returnVal = "Success.";
                 ErrorAndLog.handleLog(app, "Completed Conversion. ");
             } catch (Exception e) {
+                e.printStackTrace();
                 ErrorAndLog.handleErrors(app, e.toString());
                 ErrorAndLog.handleLog(app, "Conversion Error. Please check " + app + "Errors.txt for details.");
             }
