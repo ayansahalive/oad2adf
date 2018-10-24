@@ -370,7 +370,7 @@ public class DirCreator {
 
         str = str.replace("import oracle.apps.fnd.framework.OAViewObject;", "import oracle.jbo.ViewObject;");
         str = str.replace("import oracle.apps.fnd.framework.OAFwkConstants;", "");
-       // str = str.replace("import oracle.apps.fnd.framework.OAException;", "");
+        // str = str.replace("import oracle.apps.fnd.framework.OAException;", "");
         str = str.replace("import oracle.apps.fnd.common.MessageToken;", "");
         str = str.replace("com.sun.java.util.collections", "java.util");
         str =
@@ -438,7 +438,28 @@ public class DirCreator {
         str = str.replace("OAViewObject", "ViewObject");
         str = str.replace("OARow", "Row");
         //// =================
-    
+        BufferedReader reader;
+        String ret = "";
+        reader = new BufferedReader(new StringReader(str));
+        String line = reader.readLine();
+        while (line != null) {
+            ret = ret + line + "\n";
+            line = reader.readLine();
+            if (line != null && line.contains("OracleConnection")) {
+                line = "//" + line;
+                System.out.println(line.lastIndexOf(");"));
+                if (line.lastIndexOf(");") == -1) {
+                    ret = ret + line + "\n";
+                    line = reader.readLine();
+                    line = "//" + line;
+                }
+            } else if(line != null && line.contains(".prepareStatement")) {
+                //String tempStr = line.substring(0, line.indexOf("="));
+                line = line.replace(line.substring(line.indexOf("=") +1, line.indexOf(".prepareStatement")+8), "getDBTransaction().createPrepared");
+                line = line.replace(line.substring(line.lastIndexOf(");"), line.lastIndexOf(");")+2), ",0);");
+            }
+        }
+        str = ret;
         FileReaderWritter.writeFile(str, path);
     }
 
@@ -454,7 +475,7 @@ public class DirCreator {
 
         //        str.replace("OAAddTableRowBean","");
         //        str.replace("OAAdvancedSearchBean","");
-        str.replace("OAAdvancedTableBean","RichTable");
+        str = str.replace("OAAdvancedTableBean", "RichTable");
         //        str.replace("OAApplicationSwitcherBean","");
         //        str.replace("OAAttachmentImageBean","");
         //        str.replace("OAAttachmentTableBean","");
@@ -463,13 +484,13 @@ public class DirCreator {
         //        str.replace("OABreadCrumbsBean","");
         //        str.replace("OABrowseMenuBean","");
         //        str.replace("OABulletedListBean","");
-        str.replace("OAButtonBean", "RichButton");
+        str = str.replace("OAButtonBean", "RichButton");
         //        str.replace("OAButtonSpacerBean","");
         //        str.replace("OAButtonSpacerRowBean","");
         //        str.replace("OACardBean","");
         //        str.replace("OACellFormatBean","");
-        str.replace("OACheckBoxBean", "RichSelectBooleanCheckbox");
-        str.replace("OAChoiceBean", "RichSelectManyChoice");
+        str = str.replace("OACheckBoxBean", "RichSelectBooleanCheckbox");
+        str = str.replace("OAChoiceBean", "RichSelectManyChoice");
         //        str.replace("OAColumnBean","");
         //        str.replace("OAColumnGroupBean","");
         //        str.replace("OAContentContainerBean","");
@@ -499,7 +520,7 @@ public class DirCreator {
         //        str.replace("OAFlexibleRowLayoutBean","");
         //        str.replace("OAFlowLayoutBean","");
         //        str.replace("OAFooterBean","");
-        str.replace("OAFormattedTextBean", "RichOutputFormatted");
+        str = str.replace("OAFormattedTextBean", "RichOutputFormatted");
         //        str.replace("OAFormBean","");
         //        str.replace("OAFormParameterBean","");
         //        str.replace("OAFormValueBean","");
@@ -518,8 +539,8 @@ public class DirCreator {
         //        str.replace("OAHideShowHeaderBean","");
         //        str.replace("OAHideShowSubTabLayoutBean","");
         //        str.replace("OAHTMLWebBean","");
-        str.replace("OAIconBean", "RichIcon");
-        str.replace("OAImageBean", "RichImage");
+        str = str.replace("OAIconBean", "RichIcon");
+        str = str.replace("OAImageBean", "RichImage");
         //        str.replace("OAImportScriptBean","");
         //        str.replace("OAIncludeBean","");
         //        str.replace("OAInfotileBean","");
@@ -530,7 +551,7 @@ public class DirCreator {
         //        str.replace("OAKFFLovBean","");
         //        str.replace("OALabelBean","");
         //        str.replace("OALabeledFieldLayoutBean","");
-        str.replace("OALinkBean", "RichLink");
+        str = str.replace("OALinkBean", "RichLink");
         //        str.replace("OAListBean","");
         //        str.replace("OAListOfValuesBean","");
         //        str.replace("OALovActionButtonBean","");
@@ -541,28 +562,28 @@ public class DirCreator {
         //        str.replace("OAMenuItemBean","");
         //        str.replace("OAMessageAttachmentLinkBean","");
         //        str.replace("OAMessageBoxBean","");
-        str.replace("OAMessageCheckBoxBean", "RichSelectBooleanCheckbox");
-        str.replace("OAMessageChoiceBean", "RichSelectOneChoice");
-        str.replace("OAMessageColorFieldBean", "RichChooseColor");
+        str = str.replace("OAMessageCheckBoxBean", "RichSelectBooleanCheckbox");
+        str = str.replace("OAMessageChoiceBean", "RichSelectOneChoice");
+        str = str.replace("OAMessageColorFieldBean", "RichChooseColor");
         //        str.replace("OAMessageComponentLayoutBean","");
-        str.replace("OAMessageDateFieldBean", "RichInputDate");
+        str = str.replace("OAMessageDateFieldBean", "RichInputDate");
         //        str.replace("OAMessageDownloadBean","");
         //        str.replace("OAMessageFileUploadBean","");
         //        str.replace("OAMessageGaugeBean","");
         //        str.replace("OAMessageInlineAttachmentBean","");
         //        str.replace("OAMessageLayoutBean","");
         //        str.replace("OAMessageListBean","");
-        str.replace("OAMessageLovChoiceBean", "RichInputComboboxListOfValues");
-        str.replace("OAMessageLovInputBean", "RichInputListOfValues");
+        str = str.replace("OAMessageLovChoiceBean", "RichInputComboboxListOfValues");
+        str = str.replace("OAMessageLovInputBean", "RichInputListOfValues");
         //        str.replace("OAMessageLovTextInputBean", "");
         //        str.replace("OAMessagePromptBean","");
-        str.replace("OAMessageRadioButtonBean", "RichSelectBooleanRadio");
-        str.replace("OAMessageRadioGroupBean", "RichSelectOneRadio");
+        str = str.replace("OAMessageRadioButtonBean", "RichSelectBooleanRadio");
+        str = str.replace("OAMessageRadioGroupBean", "RichSelectOneRadio");
         //        str.replace("OAMessageRatingBarBean","");
-        str.replace("OAMessageRichTextEditorBean", "RichTextEditor");
-        str.replace("OAMessageSpinBoxBean", "RichInputNumberSpinbox");
-        str.replace("OAMessageStyledTextBean", "RichOutputText");
-        str.replace("OAMessageTextInputBean", "RichInputText");
+        str = str.replace("OAMessageRichTextEditorBean", "RichTextEditor");
+        str = str.replace("OAMessageSpinBoxBean", "RichInputNumberSpinbox");
+        str = str.replace("OAMessageStyledTextBean", "RichOutputText");
+        str = str.replace("OAMessageTextInputBean", "RichInputText");
         //        str.replace("OAMultipleSelectionBean", "");
         //        str.replace("OANavigationBarBean","");
         //        str.replace("OAOptionBean","");
@@ -570,14 +591,14 @@ public class DirCreator {
         //        str.replace("OAPageHeaderLayoutBean","");
         //        str.replace("OAPageLayoutBean","");
         //        str.replace("OAPanelSplitterBean","");
-        str.replace("OAPopupBean", "RichPopup");
+        str = str.replace("OAPopupBean", "RichPopup");
         //        str.replace("OAPortletStyleSheetBean","");
         //        str.replace("OAProcessingBean","");
         //        str.replace("OAQueryBean","");
         //        str.replace("OAQuickLinksBean", "");
         //        str.replace("OARadioButtonBean", "");
         //        str.replace("OARadioGroupBean", "");
-        str.replace("OARawTextBean", "RichOutputFormatted");
+        str = str.replace("OARawTextBean", "RichOutputFormatted");
         //        str.replace("OARepeaterBean","");
         //        str.replace("OAResetButtonBean", "");
         //        str.replace("OARichContainerBean","");
@@ -585,14 +606,14 @@ public class DirCreator {
         //        str.replace("OARowLayoutBean","");
         //        str.replace("OAScriptBean","");
         //        str.replace("OASelectionButtonBean","");
-        str.replace("OASeparatorBean", "RichSeparator");
+        str = str.replace("OASeparatorBean", "RichSeparator");
         //        str.replace("OAServletIncludeBean","");
-        str.replace("OAShuttleBean", "RichSelectManyShuttle");
+        str = str.replace("OAShuttleBean", "RichSelectManyShuttle");
         //        str.replace("OASideBarBean","");
         //        str.replace("OASideNavBean","");
         //        str.replace("OASingleSelectionBean", "");
         //        str.replace("OASortableHeaderBean","");
-        str.replace("OASpacerBean", "RichSpacer");
+        str = str.replace("OASpacerBean", "RichSpacer");
         //        str.replace("OASpacerCellBean","");
         //        str.replace("OASpacerRowBean","");
         //        str.replace("OASpringboardBean","");
@@ -603,7 +624,7 @@ public class DirCreator {
         //        str.replace("OAStyledListBean","");
         //        str.replace("OAStyledTextBean", "");
         //        str.replace("OAStyleSheetBean","");
-        str.replace("OASubmitButtonBean", "HtmlCommandButton");
+        str = str.replace("OASubmitButtonBean", "HtmlCommandButton");
         //        str.replace("OASubTabBarBean","");
         //        str.replace("OASubTabLayoutBean","");
         //        str.replace("OASwitcherBean","");
@@ -626,7 +647,7 @@ public class DirCreator {
         //        str.replace("OATryBean","");
         //        str.replace("OAUrlIncludeBean","");
         //        str.replace("OAWebBean","");
-
+        str = str.replace("OAException", "JboException");
         FileReaderWritter.writeFile(str, path);
     }
 }

@@ -37,7 +37,7 @@ public class BeanGen {
             "    public void setS1(RichSeparator s1) {\n" + "        this.s1 = s1;\n" + "    }\n\n" + "" +
             "    public RichSeparator getS1() {\n" + "        return s1;\n" + "    }\n" + "}";
 
-        FileReaderWritter.writeFile(bean, pathVC + "\\src\\view\\backing\\" + pgName + "Bean.java");
+        FileReaderWritter.writeFile(bean, pathVC);
         System.out.println("End Conv: createBean ");
     }
 
@@ -63,8 +63,10 @@ public class BeanGen {
             "= " + itemName + ";\n }\n\n ";
         String declare = "\nprivate " + itemType + " " + itemName + ";";
         String temp = "";
-        temp = contents.substring(0, importLoc) + "\n" + imports + contents.substring(importLoc);
-        contents = temp;
+        if (!contents.contains(imports)) {
+            temp = contents.substring(0, importLoc) + "\n" + imports + contents.substring(importLoc);
+            contents = temp;
+        }
 
         int lastBrace = contents.lastIndexOf("}");
         temp = "";
@@ -96,11 +98,12 @@ public class BeanGen {
 
         String alContent = "public void " + content + "(ActionEvent actionEvent) {\n }\n";
         String temp = "";
-        temp =
-            contents.substring(0, importLoc) + "\nimport javax.faces.event.ActionEvent;" +
-            contents.substring(importLoc);
-        contents = temp;
-
+        if (!contents.contains("import javax.faces.event.ActionEvent;")) {
+            temp =
+                contents.substring(0, importLoc) + "\nimport javax.faces.event.ActionEvent;" +
+                contents.substring(importLoc);
+            contents = temp;
+        }
         int lastBrace = contents.lastIndexOf("}");
         temp = "";
         temp = contents.substring(0, lastBrace) + alContent + contents.substring(lastBrace);
@@ -121,11 +124,12 @@ public class BeanGen {
 
         String alContent = "public void " + content + "(ValueChangeEvent valueChangeEvent) {\n }\n";
         String temp = "";
-        temp =
-            contents.substring(0, importLoc) + "\nimport javax.faces.event.ValueChangeEvent;" +
-            contents.substring(importLoc);
-        contents = temp;
-
+        if (!contents.contains("import javax.faces.event.ValueChangeEvent;")) {
+            temp =
+                contents.substring(0, importLoc) + "\nimport javax.faces.event.ValueChangeEvent;" +
+                contents.substring(importLoc);
+            contents = temp;
+        }
         int lastBrace = contents.lastIndexOf("}");
         temp = "";
         temp = contents.substring(0, lastBrace) + alContent + contents.substring(lastBrace);
@@ -138,13 +142,25 @@ public class BeanGen {
 
     }
 
+    private static String placeImports(String contents, String importStmt) throws Exception {
+        //String contents = FileReaderWritter.getCharContents(path);
+        int importLoc = contents.indexOf(";") + 1;
+
+        String temp = "";
+        if (!contents.contains("import oracle.jbo.JboException")) {
+            temp = contents.substring(0, importLoc) + "\n" + importStmt + contents.substring(importLoc);
+            contents = temp;
+        }
+        return contents;
+    }
+
     /**
      *
      * @param pathVC
      * @param pgName
      * @throws Exception
      */
-    protected static void createAdfConfig(String pathVC, String pgName) throws Exception {
+    protected static void createAdfConfig(String pathVC, String pgName, String beanPath) throws Exception {
         System.out.println("Start Conv: createAdfConfig " + pathVC + " " + pgName);
         //        try {
         File inputFile = new File(pathVC + "\\public_html\\WEB-INF\\adfc-config.xml");
@@ -158,7 +174,7 @@ public class BeanGen {
         Element beanName = doc.createElement("managed-bean-name");
         beanName.setTextContent(pgName + "Bean");
         Element beanClass = doc.createElement("managed-bean-class");
-        beanClass.setTextContent("view.backing." + pgName + "Bean");
+        beanClass.setTextContent(beanPath);
         Element beanScope = doc.createElement("managed-bean-scope");
         beanScope.setTextContent("backingBean");
 
@@ -181,7 +197,7 @@ public class BeanGen {
      * @param dest
      * @param src
      */
-    protected static void copyProcessFormRequest(String path, String app, String dest, String src) throws Exception {
+    protected static void copyProcessFormRequest(String path, String app, String beanPath) throws Exception {
         //        try {
         //System.out.println("Start Conv: copyProcessFormRequest " + path + " " + app + " " + dest + " " + src);
         ErrorAndLog.handleLog(app, "converting " + path);
@@ -226,19 +242,35 @@ public class BeanGen {
                 String[] s = line.split("webBean.findIndexedChildRecursive");
                 String tempStr = s[1].substring(2, s[1].indexOf("\"", 2));
                 line = s[0] + "get" + tempStr + "()" + s[1].substring(s[1].indexOf(")") + 1);
+            } else if (line != null && line.contains("new OAException(")) {
+                if (line.lastIndexOf(");") == -1) {
+                    line = line.substring(0, line.lastIndexOf(","));
+                    ret = ret + line + "\n";
+                    line = reader.readLine();
+                    if (line.contains("OAException.ERROR")) {
+                        line = line.replace("OAException.ERROR", "");
+                    }
+                } else {
+                    if (line.contains(", OAException.ERROR")) {
+                        line = line.replace(", OAException.ERROR", "");
+                    } else if (line.contains(",OAException.ERROR")) {
+                        line = line.replace(",OAException.ERROR", "");
+                    }
+                }
             }
         }
         System.out.println(ret);
         if (reader != null) {
             reader.close();
         }
-        String jsfBeanPath = dest + "\\" + app + "\\ViewCOntroller" + "\\src\\view\\backing\\" + pageName + "Bean.java";
-        String jsfStr = FileReaderWritter.getCharContents(jsfBeanPath);
+
+        String jsfStr = FileReaderWritter.getCharContents(beanPath);
         jsfStr = jsfStr.subSequence(0, jsfStr.lastIndexOf("}")).toString();
         jsfStr = jsfStr + ret + "}";
-        System.out.println("jsfBean Path::::" + jsfBeanPath);
-        FileReaderWritter.writeFile(jsfStr, jsfBeanPath);
-        DirCreator.WebBeanReplacements(jsfBeanPath);
+        System.out.println("jsfBean Path::::" + beanPath);
+        jsfStr = placeImports(jsfStr, "import oracle.jbo.JboException;");
+        FileReaderWritter.writeFile(jsfStr, beanPath);
+        DirCreator.WebBeanReplacements(beanPath);
         //        } catch (IOException ioe) {
         //            // TODO: Add catch code
         //            ioe.printStackTrace();

@@ -16,6 +16,7 @@ import org.w3c.dom.*;
 
 public class JSFGen {
     private static Map<String, Element> customRadioButtonDetails = new HashMap<String, Element>();
+    private static String packagePath = null;
 
 
     public JSFGen() {
@@ -27,7 +28,12 @@ public class JSFGen {
         System.out.println("Start Conv: handlePage " + path + " " + app + " " + Dest + " " + repo);
         String pgName = path.substring(path.lastIndexOf("\\") + 1);
         pgName = pgName.replace(".xml", "");
-        String pathVC = Dest + "\\" + app + "\\ViewController";
+        //String pathVC = Dest + "\\" + app + "\\ViewController";
+        String destination = FileReaderWritter.getViewDestinationPath(path, app, Dest, src);
+        String pagePath = destination.replace(".xml", ".jsf");
+        String tempPath = path.replace(src+FileReaderWritter.getSeparator(), "");
+        packagePath = tempPath.substring(0,  tempPath.lastIndexOf("\\"));
+
 
         try {
             File oaf = new File(path); // OAF
@@ -65,20 +71,29 @@ public class JSFGen {
                     jsfBeanName = currentAtt.getNodeValue();
                 }
             }
-
-            createJSF(pgName, pathVC, title, windowTitle);
-            BeanGen.createBean(pgName, pathVC);
-
-            File jsf = new File(Dest + "\\" + app + "\\ViewController\\public_html\\" + pgName + ".jsf");
+            String beanPath =
+                destination.substring(0, destination.indexOf("ViewController") + 14) +
+                FileReaderWritter.getSeparator() + "src" + FileReaderWritter.getSeparator() + "view" +
+                FileReaderWritter.getSeparator() + jsfBeanName.replace(".", FileReaderWritter.getSeparator()) + ".java";
             DocumentBuilderFactory newDbFactory = DocumentBuilderFactory.newInstance();
             newDbFactory.setValidating(false);
             DocumentBuilder newDBuilder = newDbFactory.newDocumentBuilder();
-            Document jsfDoc = newDBuilder.parse(jsf);
-            NodeList formList = jsfDoc.getElementsByTagName("af:form");
-            Element form = (Element) formList.item(0);
+            Document jsfDoc = newDBuilder.newDocument();
+
+            Element headerNode = createJSF(pgName, title, windowTitle, jsfDoc);
+            BeanGen.createBean(pgName, beanPath);
+
+            //            File jsf = new File(Dest + "\\" + app + "\\ViewController\\public_html\\" + pgName + ".jsf");
+            //            DocumentBuilderFactory newDbFactory = DocumentBuilderFactory.newInstance();
+            //            newDbFactory.setValidating(false);
+            //            DocumentBuilder newDBuilder = newDbFactory.newDocumentBuilder();
+            //            Document jsfDoc = newDBuilder.parse(jsf);
+            //            NodeList formList = jsfDoc.getElementsByTagName("af:panelHeader");
+            //            Element form = (Element) formList.item(0);
             // Element retElement = null;
             if (nodes.getLength() > 0) {
-                recursiveNodes(nodes, jsfDoc, Dest, app, pgName, amDef, jsfBeanName, src, filePaths, form);
+                recursiveNodes(nodes, jsfDoc, Dest, app, pgName, amDef, jsfBeanName, src, filePaths, headerNode,
+                               beanPath);
             }
 
             //            for (int i = 0; i < nodes.getLength(); i++) {
@@ -94,9 +109,10 @@ public class JSFGen {
             //                }
             //            }
 
-            FileReaderWritter.writeXMLFile(jsfDoc, pathVC + "\\public_html\\" + pgName + ".jsf");
-            BeanGen.createAdfConfig(pathVC, pgName);
-            BeanGen.copyProcessFormRequest(path, app, Dest, src);
+            FileReaderWritter.writeXMLFile(jsfDoc, pagePath);
+            String beanCompletePath ="view."+jsfBeanName;
+            BeanGen.createAdfConfig(destination.substring(0, destination.indexOf("ViewController") + 14), pgName, beanCompletePath);
+            BeanGen.copyProcessFormRequest(path, app, beanPath);
 
             System.out.println("End Conv: handlePage");
         } catch (Exception e) {
@@ -106,24 +122,24 @@ public class JSFGen {
     }
 
     public static void recursiveNodes(NodeList nodeList, Document jsfDoc, String Dest, String app, String pgName,
-                                      String amDef, String jsfBeanName, String src, Map filePaths,
-                                      Element form) throws Exception {
+                                      String amDef, String jsfBeanName, String src, Map filePaths, Element form,
+                                      String beanPath) throws Exception {
         Element retElement = null;
         for (int i = 0; i < nodeList.getLength(); i++) {
             Node node = nodeList.item(i);
             System.out.println(node.getNodeName());
             if (node.getNodeType() == Node.ELEMENT_NODE) {
-                retElement = convert(node, jsfDoc, Dest, app, pgName, amDef, src, filePaths, false);
+                retElement = convert(node, jsfDoc, Dest, app, pgName, amDef, src, filePaths, false, beanPath);
                 if (!node.getNodeName().equals("oa:messageLovInput") &&
                     !node.getNodeName().equals("oa:advancedTable")) {
                     NodeList childNodeList = node.getChildNodes();
                     if (childNodeList.getLength() > 0) {
                         if (retElement != null) {
                             recursiveNodes(childNodeList, jsfDoc, Dest, app, pgName, amDef, jsfBeanName, src, filePaths,
-                                           retElement);
+                                           retElement, beanPath);
                         } else {
                             recursiveNodes(childNodeList, jsfDoc, Dest, app, pgName, amDef, jsfBeanName, src, filePaths,
-                                           form);
+                                           form, beanPath);
                         }
                     }
                 }
@@ -136,11 +152,12 @@ public class JSFGen {
     }
 
     private static Element convert(Node currentNode, Document jsfDoc, String Dest, String app, String pgName,
-                                   String amDef, String src, Map filePaths, boolean isTableComp) throws Exception {
+                                   String amDef, String src, Map filePaths, boolean isTableComp,
+                                   String beanPath) throws Exception {
         System.out.println("Start Conv: convert");
         Element retElement = null;
         String strElement = currentNode.getNodeName(); // oaf
-        String path = Dest + "\\" + app + "\\ViewController\\src\\view\\backing\\" + pgName + "Bean.java";
+        String path = beanPath;
         if (strElement.equals("oa:messageStyledText")) {
             retElement = convertMessageStyledText(currentNode, jsfDoc, Dest, app, pgName, amDef, path, isTableComp);
         } else if (strElement.equals("oa:messageTextInput")) {
@@ -171,25 +188,84 @@ public class JSFGen {
             retElement = convertRowLayout(currentNode, jsfDoc);
         } else if (strElement.equals("oa:cellFormat")) {
             retElement = convertCellLayout(currentNode, jsfDoc);
+        } else if (strElement.equals("oa:messageCheckBox")) {
+            retElement = convertCheckBox(currentNode, jsfDoc, path, isTableComp);
+        } else if (strElement.equals("oa:switcher")) {
+            retElement =
+                convertSwitcher(currentNode, jsfDoc, Dest, app, pgName, amDef, path, isTableComp, src, filePaths);
+        } else if (strElement.equals("oa:messageRadioButton")) {
+            retElement =
+                convertMessageRadioButton(currentNode, jsfDoc, Dest, app, pgName, amDef, path, filePaths, isTableComp);
+        } else if (strElement.equals("oa:spacer")) {
+            retElement = convertSpacer(currentNode, jsfDoc);
         }
         return retElement;
     }
 
-    private static void createJSF(String pgName, String pathVC, String title, String windowTitle) throws Exception {
-        System.out.println("Start Conv: createJSF " + pgName + " " + pathVC + " " + title + " " + windowTitle);
-        String jsf =
-            "<?xml version='1.0' encoding='UTF-8'?> " + "<!DOCTYPE html> " +
-            "<f:view xmlns:f=\"http://java.sun.com/jsf/core\" xmlns:af=\"http://xmlns.oracle.com/adf/faces/rich\"> " +
-            "<af:document id=\"d1\" title=\"" + "" + windowTitle + "\" binding=\"#{backingBeanScope." + pgName +
-            "Bean.d1}\"> " + "<af:form id=\"f1\" binding=\"#{backingBeanScope." + pgName + "Bean.f1}\"> " +
-            "<af:panelHeader text=\"" + "" + title + "\" id=\"ph1\" binding=\"#{backingBeanScope." + pgName +
-            "Bean.ph1}\"> " + "<f:facet name=\"context\"/> " + "<f:facet name=\"menuBar\"/> " +
-            "<f:facet name=\"toolbar\"/> " + "<f:facet name=\"legend\"> " +
-            "<af:separator id=\"s1\" binding=\"#{backingBeanScope." + pgName + "Bean.s1}\"/> " + "</f:facet> " +
-            "<f:facet name=\"info\"/> " + "</af:panelHeader> " + " </af:form> " + "</af:document> " + "</f:view>";
+    private static Element createJSF(String pgName, String title, String windowTitle,
+                                     Document jsfDoc) throws Exception {
+        System.out.println("Start Conv: createJSF " + pgName + " " + " " + title + " " + windowTitle);
 
-        FileReaderWritter.writeFile(jsf, pathVC + "\\public_html\\" + pgName + ".jsf");
+        Element viewElement = jsfDoc.createElement("f:view");
+        jsfDoc.appendChild(viewElement);
+
+        viewElement.setAttribute("xmlns:f", "http://java.sun.com/jsf/core");
+        viewElement.setAttribute("xmlns:af", "http://xmlns.oracle.com/adf/faces/rich");
+
+        Element docElement = jsfDoc.createElement("af:document");
+        viewElement.appendChild(docElement);
+
+        docElement.setAttribute("id", "d1");
+        docElement.setAttribute("title", windowTitle);
+        docElement.setAttribute("binding", "#{backingBeanScope." + pgName + "Bean.d1}");
+
+        Element formElement = jsfDoc.createElement("af:form");
+        docElement.appendChild(formElement);
+
+        formElement.setAttribute("id", "f1");
+        formElement.setAttribute("binding", "#{backingBeanScope." + pgName + "Bean.f1}");
+
+        Element panelHeaderElement = jsfDoc.createElement("af:panelHeader");
+        formElement.appendChild(panelHeaderElement);
+
+        panelHeaderElement.setAttribute("id", "ph1");
+        panelHeaderElement.setAttribute("text", title);
+        panelHeaderElement.setAttribute("binding", "#{backingBeanScope." + pgName + "Bean.ph1}");
+
+        Element facetElement1 = jsfDoc.createElement("f:facet");
+        panelHeaderElement.appendChild(facetElement1);
+
+        facetElement1.setAttribute("name", "context");
+
+        Element facetElement2 = jsfDoc.createElement("f:facet");
+        panelHeaderElement.appendChild(facetElement2);
+
+        facetElement2.setAttribute("name", "menuBar");
+
+        Element facetElement3 = jsfDoc.createElement("f:facet");
+        panelHeaderElement.appendChild(facetElement3);
+
+        facetElement3.setAttribute("name", "toolbar");
+
+        Element facetElement4 = jsfDoc.createElement("f:facet");
+        panelHeaderElement.appendChild(facetElement4);
+
+        facetElement4.setAttribute("name", "legend");
+
+        Element separatorElement = jsfDoc.createElement("af:separator");
+        facetElement4.appendChild(separatorElement);
+
+        separatorElement.setAttribute("id", "s1");
+        separatorElement.setAttribute("binding", "#{backingBeanScope." + pgName + "Bean.s1}");
+
+        Element facetElement5 = jsfDoc.createElement("f:facet");
+        panelHeaderElement.appendChild(facetElement5);
+
+        facetElement5.setAttribute("name", "info");
+        //FileReaderWritter.writeXMLFile(jsfDoc, pathVC + "\\public_html\\" + pgName + ".jsf");
         System.out.println("End Conv: convert");
+
+        return panelHeaderElement;
     }
 
     public static List<Node> getNode(NodeList nodeList, String nodeName) {
@@ -239,12 +315,12 @@ public class JSFGen {
             }
         }
         if (isTableComp) {
-            PageDefXml.handlePageDef(pgName, bindingVO, bindingAttr, Dest, app, amDef, "tableAttr", null, null, null);
+            PageDefXml.handlePageDef(pgName, bindingVO, bindingAttr, Dest, app, amDef, "tableAttr", null, null, null, packagePath);
             retElement.setAttribute("value", "#{row." + bindingAttr + "}");
             //BeanGen.createGetterSetter(itemName, itemType, beanPath, imports);
         } else {
             PageDefXml.handlePageDef(pgName, bindingVO, bindingAttr, Dest, app, amDef, "attributeValues", null, null,
-                                     null);
+                                     null, packagePath);
             retElement.setAttribute("value", "#{bindings." + bindingAttr + ".inputValue}");
             BeanGen.createGetterSetter(itemName, itemType, beanPath, imports);
         }
@@ -309,15 +385,15 @@ public class JSFGen {
                                 bindingAttr = attrNode.getNodeValue();
                             }
                         }
-                        Element columnElement = convertColumnElement(jsfDoc, bindingVO, bindingAttr, columnId, null);
-                        columnElement.appendChild(convertMessageStyledText(compNode, jsfDoc, Dest, app, pgName, amDef,
-                                                                           beanPath, true));
-                        retElement.appendChild(columnElement);
-                    } else if (compNodeName.equals("oa:button")) {
-                        Element columnElement = convertColumnElement(jsfDoc, bindingVO, bindingAttr, columnId, null);
-                        columnElement.appendChild(convertButton(compNode, jsfDoc, pgName, beanPath, true));
-                        retElement.appendChild(columnElement);
-                    } else if (compNodeName.equals("oa:switcher")) {
+
+
+                    }
+                    //                    else if (compNodeName.equals("oa:button")) {
+                    //                        Element columnElement = convertColumnElement(jsfDoc, bindingVO, bindingAttr, columnId, null);
+                    //                        columnElement.appendChild(convertButton(compNode, jsfDoc, pgName, beanPath, true));
+                    //                        retElement.appendChild(columnElement);
+                    //                    }
+                    else if (compNodeName.equals("oa:switcher")) {
                         NamedNodeMap compAttr = compNode.getAttributes();
                         for (int k = 0; k < compAttr.getLength(); k++) {
                             Node attrNode = compAttr.item(k);
@@ -326,17 +402,28 @@ public class JSFGen {
                                 bindingAttr = attrNode.getNodeValue();
                             }
                         }
-                        Element columnElement = convertColumnElement(jsfDoc, bindingVO, bindingAttr, columnId, null);
-                        columnElement.appendChild(convertSwitcher(compNode, jsfDoc, Dest, app, pgName, amDef, beanPath,
-                                                                  true, src, filePaths));
+                        //                        Element columnElement = convertColumnElement(jsfDoc, bindingVO, bindingAttr, columnId, null);
+                        //                        columnElement.appendChild(convertSwitcher(compNode, jsfDoc, Dest, app, pgName, amDef, beanPath,
+                        //                                                                  true, src, filePaths));
+                        //                        retElement.appendChild(columnElement);
+                        //                    } else if (compNodeName.equals("oa:messageLovInput")) {
+                        //                        Element columnElement = convertColumnElement(jsfDoc, bindingVO, bindingAttr, columnId, null);
+                        //                        columnElement.appendChild(convertMessageLovInput(compNode, jsfDoc, Dest, app, src, pgName,
+                        //                                                                         amDef, beanPath, filePaths, true));
+                        //                        retElement.appendChild(columnElement);
+                        //                    } else if (compNodeName.equals("oa:messageChoice")) {
+                        //                        Element columnElement = convertColumnElement(jsfDoc, bindingVO, bindingAttr, columnId, null);
+                        //                        columnElement.appendChild(convertMessageChoice(compNode, jsfDoc, Dest, app, pgName, amDef,
+                        //                                                                       beanPath, filePaths, true));
+                        //                        retElement.appendChild(columnElement);
+                    }
+                    Element columnElement = convertColumnElement(jsfDoc, bindingVO, bindingAttr, columnId, null);
+                    Element childElement =
+                        convert(compNode, jsfDoc, Dest, app, pgName, amDef, src, filePaths, true, beanPath);
+                    System.out.println(childElement);
+                    if (childElement != null) {
+                        columnElement.appendChild(childElement);
                         retElement.appendChild(columnElement);
-                    } else if (compNodeName.equals("oa:messageLovInput")) {
-                        Element columnElement = convertColumnElement(jsfDoc, bindingVO, bindingAttr, columnId, null);
-                        columnElement.appendChild(convertMessageLovInput(compNode, jsfDoc, Dest, app, src, pgName,
-                                                                         amDef, beanPath, filePaths, true));
-                        retElement.appendChild(columnElement);
-                    } else if (compNodeName.equals("oa:messageChoice")) {
-
                     }
                 }
             }
@@ -426,7 +513,7 @@ public class JSFGen {
             retElement.setAttribute("value", "#{row." + bindingAttr + "}");
         } else {
             PageDefXml.handlePageDef(pgName, bindingVO, bindingAttr, Dest, app, amDef, "attributeValues", null, null,
-                                     null);
+                                     null, packagePath);
             retElement.setAttribute("value", "#{bindings." + bindingAttr + ".inputValue}");
             BeanGen.createGetterSetter(itemName, itemType, beanPath, imports);
         }
@@ -541,16 +628,26 @@ public class JSFGen {
 
                 if (regionFile.exists()) {
                     System.out.println("Region File Exists.......");
-
+                    boolean isLovExists = false;
+                    String tempId = null;
                     List<Node> pageNodes = getNode(currentNode.getChildNodes(), "lovMap");
                     for (Node node : pageNodes) {
                         NamedNodeMap namedNodeMap = node.getAttributes();
                         for (int i = 0; i < namedNodeMap.getLength(); i++) {
                             Node attrNode = namedNodeMap.item(i);
                             if (attrNode.getNodeName().equals("lovItem")) {
-                                lovAttr = attrNode.getNodeValue();
+                                tempId = attrNode.getNodeValue();
+                            }
+                            if (attrNode.getNodeName().equals("resultTo")) {
+                                if (attrNode.getNodeValue().equals(itemName)) {
+                                    isLovExists = true;
+                                   // break;
+                                }
                             }
 
+                        }
+                        if(isLovExists) {
+                            break;
                         }
                     }
                     DocumentBuilderFactory newDbFactory = DocumentBuilderFactory.newInstance();
@@ -562,9 +659,11 @@ public class JSFGen {
                     List<Node> nodes = getNode(nodeList, "oa:messageStyledText");
                     for (Node node : nodes) {
                         String tempLovAttr = ((Element) node).getAttribute("viewAttr");
-                        if (tempLovAttr.equals(lovAttr)) {
+                        if (tempLovAttr.equals(tempId)) {
                             lovView = ((Element) node).getAttribute("viewName");
+                            lovAttr = ((Element) node).getAttribute("viewAttr");
                         }
+                        
                     }
                 }
                 VOXml.addLovDetails((String) filePaths.get(bindingVO), bindingAttr, lovView, lovAttr, "lovInput");
@@ -573,37 +672,44 @@ public class JSFGen {
 
         if (bindingVO != null && bindingAttr != null && !isExternalLov) {
             NodeList nodeList = currentNode.getChildNodes();
+            String tempId = null;
             List<Node> pageNodes = getNode(nodeList, "lovMap");
+            boolean isLovExists = false;
             for (Node node : pageNodes) {
                 NamedNodeMap namedNodeMap = node.getAttributes();
                 for (int i = 0; i < namedNodeMap.getLength(); i++) {
                     Node attrNode = namedNodeMap.item(i);
                     if (attrNode.getNodeName().equals("lovItem")) {
-                        lovAttr = attrNode.getNodeValue();
+                        tempId = attrNode.getNodeValue();
                     }
-                    if(attrNode.getNodeName().equals("resultTo")) {
-                        if(attrNode.getNodeValue().equals(itemName)) {
-                            break;
+                    if (attrNode.getNodeName().equals("resultTo")) {
+                        if (attrNode.getNodeValue().equals(itemName)) {
+                            isLovExists = true;
+                           // break;
                         }
                     }
 
+                }
+                if(isLovExists) {
+                    break;
                 }
             }
 
             List<Node> nodes = getNode(nodeList, "oa:messageStyledText");
             for (Node node : nodes) {
-                String tempLovAttr = ((Element) node).getAttribute("viewAttr");
-                if (tempLovAttr.equals(lovAttr)) {
+                String tempLovAttr = ((Element) node).getAttribute("id");
+                if (tempLovAttr.equals(tempId)) {
                     lovView = ((Element) node).getAttribute("viewName");
+                    lovAttr = ((Element) node).getAttribute("viewAttr");
                 }
             }
-            VOXml.addLovDetails((String) filePaths.get(bindingVO), bindingAttr, lovView, lovAttr, "lovInput");
+            VOXml.addLovDetails((String) filePaths.get(bindingVO), bindingAttr,(String) filePaths.get(lovView) , lovAttr, "lovInput");
         }
 
         if (!isTableComp) {
             BeanGen.createGetterSetter(itemName, itemType, beanPath, imports);
             PageDefXml.handlePageDef(pgName, bindingVO, bindingAttr, Dest, app, amDef, "listOfValues", null, null,
-                                     null);
+                                     null, packagePath);
             retElement.setAttribute("value", "#{bindings." + bindingAttr + ".inputValue}");
             retElement.setAttribute("label", "#{bindings." + bindingAttr + ".label}");
             retElement.setAttribute("required", "#{bindings." + bindingAttr + ".hints.mandatory}");
@@ -674,7 +780,7 @@ public class JSFGen {
         if (!isTableComp) {
             BeanGen.createGetterSetter(itemName, itemType, beanPath, imports);
             PageDefXml.handlePageDef(pgName, bindingVO, bindingAttr, Dest, app, amDef, "list", pickListAttr, pickListVO,
-                                     null);
+                                     null, packagePath);
         }
         return retElement;
     }
@@ -773,7 +879,7 @@ public class JSFGen {
         List<Node> treeNodes = getNode(treeNodeList, "af:column");
         List<String> attrList = getTreeItems(treeNodes);
         System.out.println("filepaths::::" + (String) filePaths.get(bindingVO));
-        PageDefXml.handlePageDef(pgName, bindingVO, attrList, Dest, app, amDef, "tree", null, null, null);
+        PageDefXml.handlePageDef(pgName, bindingVO, attrList, Dest, app, amDef, "tree", null, null, (String)filePaths.get(bindingVO), packagePath);
         BeanGen.createGetterSetter(itemName, itemType, beanPath, imports);
         return retElement;
     }
@@ -1025,8 +1131,8 @@ public class JSFGen {
 
                 Element columnElement = convertCaseElement(jsfDoc, nameAttr);
                 Element convertedElement =
-                    genericSwitcherCaseMethod(node, jsfDoc, Dest, app, pgName, amDef, beanPath, bindingVO, src,
-                                              filePaths, isTableComp);
+                    genericSwitcherCaseMethod(node, jsfDoc, Dest, app, pgName, amDef, src, beanPath, filePaths,
+                                              isTableComp);
                 if (convertedElement != null)
                     columnElement.appendChild(convertedElement);
                 retElement.appendChild(columnElement);
@@ -1043,15 +1149,14 @@ public class JSFGen {
 
 
     protected static Element genericSwitcherCaseMethod(Node node, Document jsfDoc, String Dest, String app,
-                                                       String pgName, String amDef, String beanPath, String bindingVO,
-                                                       String src, Map filePaths,
-                                                       boolean isTableComp) throws Exception {
+                                                       String pgName, String amDef, String src, String beanPath,
+                                                       Map filePaths, boolean isTableComp) throws Exception {
         Element retElement = null;
         NodeList nodeList1 = node.getChildNodes();
         for (int i = 0; i < nodeList1.getLength(); i++) {
             Node caseNode = nodeList1.item(i);
             if (!caseNode.getNodeName().equals("#text")) {
-                retElement = convert(caseNode, jsfDoc, Dest, app, pgName, amDef, beanPath, filePaths, isTableComp);
+                retElement = convert(caseNode, jsfDoc, Dest, app, pgName, amDef, src, filePaths, isTableComp, beanPath);
             }
         }
         return retElement;
@@ -1089,5 +1194,64 @@ public class JSFGen {
                 }
             }
         }
+    }
+
+    protected static Element convertCheckBox(Node currentNode, Document jsfDoc, String beanPath,
+                                             Boolean isTableComp) throws Exception {
+        String itemName = "";
+        String itemType = "RichSelectManyCheckbox";
+        String imports = "import oracle.adf.view.rich.component.rich.output.RichSelectManyCheckbox;";
+
+        Element retElement = jsfDoc.createElement("af:selectManyCheckbox");
+        NamedNodeMap attrs = currentNode.getAttributes();
+        for (int a = 0; a < attrs.getLength(); a++) {
+            Node currentAtt = attrs.item(a);
+            String strAttr = currentAtt.getNodeName();
+            if (strAttr.equals("id")) {
+                itemName = currentAtt.getNodeValue();
+                retElement.setAttribute("id", itemName);
+            }
+            if (strAttr.equals("prompt")) {
+                retElement.setAttribute("label", currentAtt.getNodeValue());
+            }
+            if (strAttr.equals("checkedValue")) {
+                Element retChildElement = jsfDoc.createElement("af:selectItem");
+                retChildElement.setAttribute("id", currentAtt.getNodeValue());
+                retChildElement.setAttribute("label", currentAtt.getNodeValue());
+                retChildElement.setAttribute("value", currentAtt.getNodeValue());
+                retElement.appendChild(retChildElement);
+            }
+            if (strAttr.equals("uncheckedValue")) {
+                Element retChildElement = jsfDoc.createElement("af:selectItem");
+                retChildElement.setAttribute("id", currentAtt.getNodeValue());
+                retChildElement.setAttribute("label", currentAtt.getNodeValue());
+                retChildElement.setAttribute("value", currentAtt.getNodeValue());
+                retElement.appendChild(retChildElement);
+            }
+        }
+
+        if (!isTableComp) {
+            BeanGen.createGetterSetter(itemName, itemType, beanPath, imports);
+        }
+        return retElement;
+    }
+
+    protected static Element convertSpacer(Node currentNode, Document jsfDoc) {
+        Element retElement = jsfDoc.createElement("af:spacer");
+        NamedNodeMap attrs = currentNode.getAttributes();
+        for (int a = 0; a < attrs.getLength(); a++) {
+            Node currentAtt = attrs.item(a);
+            String strAttr = currentAtt.getNodeName();
+            if (strAttr.equals("id")) {
+                retElement.setAttribute("id", currentAtt.getNodeValue());
+            }
+            if (strAttr.equals("width")) {
+                retElement.setAttribute("width", currentAtt.getNodeValue());
+            }
+            if (strAttr.equals("height")) {
+                retElement.setAttribute("height", currentAtt.getNodeValue());
+            }
+        }
+        return retElement;
     }
 }

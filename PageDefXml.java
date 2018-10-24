@@ -2,6 +2,7 @@ package conv;
 
 import java.io.File;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -21,16 +22,11 @@ public class PageDefXml {
 
     public static void handlePageDef(String pgName, String voName, Object attrName, String dest, String app,
                                      String amDef, String bindingType, String pickListAttr, String pickListVO,
-                                     String voPath) {
-        try {
+                                     String voPath, String packagePath)throws Exception {
             DocumentBuilderFactory newDbFactory = DocumentBuilderFactory.newInstance();
             newDbFactory.setValidating(false);
             DocumentBuilder newDBuilder = newDbFactory.newDocumentBuilder();
-            String pageDefDocFolder = dest + "\\" + app + "\\ViewController\\adfmsrc\\view\\pageDefs";
-            File folder = new File(pageDefDocFolder);
-            if (!folder.exists()) {
-                folder.mkdir();
-            }
+            String pageDefDocFolder = FileReaderWritter.getViewPageDefDestinationPath(packagePath, app, dest);
             File file = new File(pageDefDocFolder + "\\" + pgName + "PageDef.xml");
             Document pageDefDoc = null;
             Element rootElement = null;
@@ -39,7 +35,7 @@ public class PageDefXml {
                 pageDefDoc = newDBuilder.newDocument();
                 pageDefDoc = createPageDef(pageDefDoc);
                 DataBindingsXml.handleDataBindingsPage(dest, app, pgName, file.getAbsolutePath(),
-                                                       amDef.substring(amDef.lastIndexOf(".") + 1));
+                                                       amDef.substring(amDef.lastIndexOf(".") + 1), packagePath);
             } else {
                 pageDefDoc = newDBuilder.parse(file);
                 rootElement = pageDefDoc.getDocumentElement();
@@ -51,21 +47,26 @@ public class PageDefXml {
                 if (node != null && node.getNodeName() != null) {
                     if (node.getNodeName().equals("executables") && (voName != null || pickListVO != null)) {
                         NodeList nodeList = node.getChildNodes();
-                        Node tempNode = getNode(nodeList, "iterator");
+                        List<Node> tempNodeList = getNode(nodeList, "iterator");
+                        //Node tempNode = null;
+                        boolean voExists = false;
                         String bindValue = null;
-                        if (tempNode != null) {
+                        for (Node tempNode : tempNodeList) {
                             NamedNodeMap tempNameNodeMap = tempNode.getAttributes();
                             if (tempNameNodeMap != null) {
                                 for (int j = 0; j < tempNameNodeMap.getLength(); j++) {
                                     Node itemNode = tempNameNodeMap.item(j);
                                     if (itemNode != null && itemNode.getNodeName().equals("Binds")) {
                                         bindValue = itemNode.getNodeValue();
+                                        if(bindValue.equals(voName) || bindValue.equals(pickListVO)) {
+                                            voExists = true;
+                                        }
                                     }
                                 }
                             }
                         }
-                        if (bindValue == null || (voName != null && !bindValue.equals(voName)) ||
-                            (voName == null || !bindValue.equals(pickListVO))) {
+                        if (!voExists) {
+                            voExists = false;
                             Element iteratorDtls = pageDefDoc.createElement("iterator");
                             node.appendChild(iteratorDtls);
 
@@ -278,8 +279,8 @@ public class PageDefXml {
                                     FileReaderWritter.getSeparator();
                                 voPath = voPath.substring(removalPath.length());
                                 voPath = voPath.substring(0, voPath.indexOf("."));
-                                voPath = voPath.replaceAll(FileReaderWritter.getSeparator(), ".");
-                            } 
+                                voPath = voPath.replace(FileReaderWritter.getSeparator(), ".");
+                            }
                             Element tree = pageDefDoc.createElement("tree");
                             node.appendChild(tree);
 
@@ -326,10 +327,7 @@ public class PageDefXml {
                 }
             }
             FileReaderWritter.writeXMLFile(pageDefDoc, file.getAbsolutePath());
-        } catch (Exception pce) {
-            // TODO: Add catch code
-            pce.printStackTrace();
-        }
+        
     }
 
     public static Document createPageDef(Document pageDefDoc) {
@@ -376,7 +374,8 @@ public class PageDefXml {
         return pageDefDoc;
     }
 
-    private static Node getNode(NodeList nodeList, String name) {
+    private static List<Node> getNode(NodeList nodeList, String name) {
+        List<Node> retNodeList = new ArrayList<Node>();
         Node node = null;
         for (int i = 0; i < nodeList.getLength(); i++) {
             node = nodeList.item(i);
@@ -384,11 +383,11 @@ public class PageDefXml {
                 // do something with the current element
                 System.out.println(node.getNodeName());
                 if (node.getNodeName().equals(name)) {
-                    return node;
+                    retNodeList.add(node);
                 }
             }
         }
-        return null;
+        return retNodeList;
     }
 
     public static void main(String[] args) {

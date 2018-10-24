@@ -203,4 +203,46 @@ public class FileReaderWritter {
         System.out.println("End Conv: getModelDestinationPath");
         return Dest;
     }
+    
+    protected static String getViewDestinationPath(String path, String app, String dest, String src) throws Exception {
+        System.out.println("Start Conv: getViewDestinationPath " + path + " " + app + " " + dest + " " + src);
+        String newPath = path;
+        newPath = newPath.replace(src + getSeparator(), "");
+        String Dest =
+            dest + getSeparator() + app + getSeparator() + "ViewController" + getSeparator() + "public_html" + getSeparator() + "view" +
+            getSeparator() + newPath;
+
+        String x = Dest.substring(0, Dest.lastIndexOf(getSeparator()));
+        new File(x).mkdirs();
+        System.out.println("End Conv: getViewDestinationPath");
+        return Dest;
+    }
+    
+    protected static String getBeanDestinationPath(String path, String app, String dest, String src) throws Exception {
+        System.out.println("Start Conv: getBeanDestinationPath " + path + " " + app + " " + dest + " " + src);
+        String newPath = path;
+        newPath = newPath.replace(src + getSeparator(), "");
+        String Dest =
+            dest + getSeparator() + app + getSeparator() + "ViewController" + getSeparator() + "src" + getSeparator() + "view" +
+            getSeparator() + newPath;
+
+        String x = Dest.substring(0, Dest.lastIndexOf(getSeparator()));
+        new File(x).mkdirs();
+        System.out.println("End Conv: getBeanDestinationPath");
+        return Dest;
+    }
+    
+    protected static String getViewPageDefDestinationPath(String path, String app, String dest) throws Exception {
+        //System.out.println("Start Conv: getViewDestinationPath " + path + " " + app + " " + dest + " " + src);
+        String newPath = path;
+        //newPath = newPath.replace(src + getSeparator(), "");
+        String Dest =
+            dest + getSeparator() + app + getSeparator() + "ViewController" + getSeparator() + "adfmsrc" + getSeparator() + "view" +
+            getSeparator() + newPath;
+
+        //String x = Dest.substring(0, Dest.lastIndexOf(getSeparator()));
+        new File(Dest).mkdirs();
+        System.out.println("End Conv: getViewDestinationPath");
+        return Dest;
+    }
 }

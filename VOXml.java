@@ -207,14 +207,21 @@ public class VOXml {
         Element ViewObjectAdf = adfDoc.getDocumentElement();
         Element viewAccessor = adfDoc.createElement("ViewAccessor");
         ViewObjectAdf.appendChild(viewAccessor);
-
+        String tempLovVOPath;
+        if (lovVO != null) {
+            lovVO = lovVO.replace(".xml","");
+            tempLovVOPath = lovVO.substring(lovVO.indexOf("src")+4).replace("\\", ".");
+            lovVO = lovVO.substring(lovVO.lastIndexOf("\\")+1);
+        } else {
+            return;
+        }
         Attr name = adfDoc.createAttribute("Name");
         name.setValue(lovVO);
         name.normalize();
         viewAccessor.setAttributeNode(name);
 
         Attr viewObjectName = adfDoc.createAttribute("ViewObjectName");
-        viewObjectName.setValue(lovVO);
+        viewObjectName.setValue(tempLovVOPath);
         viewObjectName.normalize();
         viewAccessor.setAttributeNode(viewObjectName);
 
