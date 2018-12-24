@@ -1,10 +1,16 @@
 package conv;
 
-import java.io.*;
+import java.io.File;
 
-import javax.xml.parsers.*;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
 
-import org.w3c.dom.*;
+import org.w3c.dom.Attr;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NamedNodeMap;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 
 public class EOXml {
@@ -13,7 +19,7 @@ public class EOXml {
     }
 
     /**
-     * create eo xml
+     * Eo XML handle
      * @param path
      * @param app
      * @param dest
@@ -22,16 +28,15 @@ public class EOXml {
      * @throws Exception
      */
     protected static void handleEOXml(String path, String app, String dest, String repo, String src) throws Exception {
-        System.out.println("Start Conv: handleEOXml " + path + " " + app + " " + dest + " " + repo);
-        ErrorAndLog.handleLog(app, "converting " + path);
-        String name = path.substring(path.lastIndexOf(FileReaderWritter.getSeparator()) + 1);
+        System.out.println("Start Conv: handleEOXml " + path + " " + app + " " + dest + " " + repo + " " + src);
+        ErrorAndLog.handleLog(app, "Start Conv: handleEOXml " + path + " " + app + " " + dest + " " + repo + " " + src);
         String topApp = dest + FileReaderWritter.getSeparator() + app;
         String pathModel = topApp + FileReaderWritter.getSeparator() + "Model";
         String pathModelsrc =
             pathModel + FileReaderWritter.getSeparator() + "src" + FileReaderWritter.getSeparator() + "model";
         String destination = FileReaderWritter.getModelDestinationPath(path, app, dest, src);
 
-        createEOXml(destination, repo);
+        createEOXml(destination, repo, app);
 
         String CollClassPath = src + FileReaderWritter.getSeparator();
         String DefClassPath = src + FileReaderWritter.getSeparator();
@@ -63,7 +68,7 @@ public class EOXml {
                     String temp = currentAtt.getNodeValue();
                     temp = temp.replace(".", FileReaderWritter.getSeparator());
                     CollClassPath += temp;
-                    val = DirCreator.changedModelClassPath(currentAtt.getNodeValue());
+                    val = DirCreator.changedModelClassPath(currentAtt.getNodeValue(), app);
                 }
                 EntityAdf.setAttribute(currentAtt.getNodeName(), val);
             } else if (currentAtt.getNodeName().equals("DefClass")) {
@@ -74,14 +79,14 @@ public class EOXml {
                     String temp = currentAtt.getNodeValue();
                     temp = temp.replace(".", FileReaderWritter.getSeparator());
                     DefClassPath += temp;
-                    val = DirCreator.changedModelClassPath(currentAtt.getNodeValue());
+                    val = DirCreator.changedModelClassPath(currentAtt.getNodeValue(), app);
                 }
                 EntityAdf.setAttribute(currentAtt.getNodeName(), val);
             } else if (currentAtt.getNodeName().equals("RowClass")) {
                 String temp = currentAtt.getNodeValue();
                 temp = temp.replace(".", FileReaderWritter.getSeparator());
                 RowClassPath += temp;
-                String val = DirCreator.changedModelClassPath(currentAtt.getNodeValue());
+                String val = DirCreator.changedModelClassPath(currentAtt.getNodeValue(), app);
                 EntityAdf.setAttribute(currentAtt.getNodeName(), val);
             }
 
@@ -117,7 +122,7 @@ public class EOXml {
                         if (subNode.getNodeName().equals("Association") ||
                             subNode.getNodeName().equals("AssociationEnd") ||
                             subNode.getNodeName().equals("AssociationOtherEnd")) {
-                            String val = DirCreator.changedModelClassPath(subNode.getNodeValue());
+                            String val = DirCreator.changedModelClassPath(subNode.getNodeValue(), app);
                             newNode.setAttribute(subNode.getNodeName(), val);
                         }
                         // new logic
@@ -128,7 +133,7 @@ public class EOXml {
                                 if (ResubNode.getNodeName().equals("IsUpdateable")) {
                                     String checkVal = ResubNode.getNodeValue();
                                     if (checkVal.equals("true")) {
-                                        String val = DirCreator.changedModelClassPath(subNode.getNodeValue());
+                                        String val = DirCreator.changedModelClassPath(subNode.getNodeValue(), app);
                                         newNode.setAttribute(subNode.getNodeName(), val);
                                     }
                                 }
@@ -208,31 +213,33 @@ public class EOXml {
         impVal = impVal.substring(0, impVal.lastIndexOf(FileReaderWritter.getSeparator()));
         impVal = impVal.replace(FileReaderWritter.getSeparator(), ".");
         impVal = "model." + impVal;
-        JPXGen.checkContainee(impVal, pathModelsrc);
+        JPXGen.checkContainee(impVal, pathModelsrc, app);
 
         // write files
-        FileReaderWritter.writeXMLFile(adfDoc, destination);
+        FileReaderWritter.writeXMLFile(adfDoc, destination, app);
 
         System.out.println("End Conv: handleEOXml ");
 
     }
 
     /**
-     * create empty xml
+     * Temp XML
      * @param dest
      * @param repo
+     * @param app
      * @throws Exception
      */
-    private static void createEOXml(String dest, String repo) throws Exception {
-        System.out.println("Start Conv: createEOXml " + dest + " " + repo);
+    private static void createEOXml(String dest, String repo, String app) throws Exception {
+        System.out.println("Start Conv: createEOXml " + dest + " " + repo + " " + app);
+        ErrorAndLog.handleLog(app, "Start Conv: createEOXml " + dest + " " + repo + " " + app);
         String contents =
             "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>" + "<!DOCTYPE Entity SYSTEM \"jbo_03_01.dtd\">" + "<Entity" +
             "  xmlns=\"http://xmlns.oracle.com/bc4j\"" + "  Version=\"12.1.3.10.47\"" +
             "  InheritPersonalization=\"merge\" >  <DesignTime>" + "    <Attr Name=\"_isCodegen\" Value=\"true\"/>" +
             "  </DesignTime>  </Entity>";
 
-        DirCreator.copyADFDTD(repo, dest);
-        FileReaderWritter.writeFile(contents, dest);
+        DirCreator.copyADFDTD(repo, dest, app);
+        FileReaderWritter.writeFile(contents, dest, app);
         System.out.println("End Conv: createEOXml ");
     }
 

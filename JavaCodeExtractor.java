@@ -1,6 +1,7 @@
 package conv;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class JavaCodeExtractor {
     public JavaCodeExtractor() {
@@ -24,9 +25,10 @@ public class JavaCodeExtractor {
      * @return
      * @throws Exception
      */
-    protected List<String> start(String path) throws Exception {
-        System.out.println("Start Conv: start " + path);
-        String str = FileReaderWritter.getCharContents(path);
+    protected List<String> start(String path, String app) throws Exception {
+        System.out.println("Start Conv: start " + path + " " + app);
+        ErrorAndLog.handleLog(app, "Start Conv: start " + path + " " + app);
+        String str = FileReaderWritter.getCharContents(path, app);
 
         int classStart = str.indexOf("{");
         int num = classStart + 1;
@@ -43,7 +45,7 @@ public class JavaCodeExtractor {
         opener = opener.trim();
         getVec().add(opener);
         str = str.substring(classStart + 1);
-        this.segregator(str);
+        this.segregator(str, app);
 
         getVec().add("}");
         System.out.println("End Conv: start ");
@@ -54,7 +56,7 @@ public class JavaCodeExtractor {
      * recursive method for segregation
      * @param str
      */
-    private void segregator(String str) {
+    private void segregator(String str, String app) {
         int size = str.length();
         int head = 0;
 
@@ -69,7 +71,7 @@ public class JavaCodeExtractor {
         if (semicolon < startBraces) {
             int num = semicolon + 1;
             String declaration = str.substring(0, num).trim();
-            declaration = DirCreator.replaceImports(declaration);
+            declaration = DirCreator.replaceImports(declaration, app);
             getVec().add(declaration);
             head = semicolon + 1;
             str = str.substring(head);
@@ -89,7 +91,7 @@ public class JavaCodeExtractor {
                 if (counter == 1 && closed.equals("yes")) {
                     int num = i - head + 1;
                     String method = str.substring(head, num).trim();
-                    method = DirCreator.replaceImports(method);
+                    method = DirCreator.replaceImports(method, app);
                     getVec().add(method);
                     head = i + 1;
                     str = str.substring(head);
@@ -101,7 +103,7 @@ public class JavaCodeExtractor {
         }
 
         if (head < size && str != null)
-            segregator(str);
+            segregator(str, app);
     }
 
 }

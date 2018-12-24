@@ -1,14 +1,16 @@
 package conv;
 
-import java.io.*;
-import java.io.IOException;
+import java.io.File;
 
-import javax.xml.parsers.*;
-import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
 
-import org.w3c.dom.*;
-
-import org.xml.sax.SAXException;
+import org.w3c.dom.Attr;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NamedNodeMap;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 
 public class VOXml {
@@ -25,8 +27,8 @@ public class VOXml {
      * @throws Exception
      */
     protected static void handleVOXml(String path, String app, String dest, String repo, String src) throws Exception {
-        System.out.println("Start Conv: handleVOXml " + path + " " + app + " " + dest + " " + repo);
-        ErrorAndLog.handleLog(app, "converting " + path);
+        System.out.println("Start Conv: handleVOXml " + path + " " + app + " " + dest + " " + repo + " " + src);
+        ErrorAndLog.handleLog(app, "Start Conv: handleVOXml " + path + " " + app + " " + dest + " " + repo + " " + src);
         String name = path.substring(path.lastIndexOf(FileReaderWritter.getSeparator()) + 1);
         String voName = name.replace(".xml", "");
         String topApp = dest + FileReaderWritter.getSeparator() + app;
@@ -42,7 +44,7 @@ public class VOXml {
         String RowInterface = src + FileReaderWritter.getSeparator();
         String Client = src + FileReaderWritter.getSeparator();
 
-        createVOXml(destination, repo);
+        createVOXml(destination, repo, app);
 
         File oafVO = new File(path); // OAF
         DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
@@ -66,25 +68,25 @@ public class VOXml {
                 String temp = currentAtt.getNodeValue();
                 temp = temp.replace(".", FileReaderWritter.getSeparator());
                 ImplClassPath += temp;
-                String val = DirCreator.changedModelClassPath(currentAtt.getNodeValue());
+                String val = DirCreator.changedModelClassPath(currentAtt.getNodeValue(), app);
                 ViewObjectAdf.setAttribute(currentAtt.getNodeName(), val);
             } else if (currentAtt.getNodeName().equals("DefClass")) {
                 String temp = currentAtt.getNodeValue();
                 temp = temp.replace(".", FileReaderWritter.getSeparator());
                 DefClassPath += temp;
-                String val = DirCreator.changedModelClassPath(currentAtt.getNodeValue());
+                String val = DirCreator.changedModelClassPath(currentAtt.getNodeValue(), app);
                 ViewObjectAdf.setAttribute(currentAtt.getNodeName(), val);
             } else if (currentAtt.getNodeName().equals("ClientRowProxyName")) {
                 String temp = currentAtt.getNodeValue();
                 temp = temp.replace(".", FileReaderWritter.getSeparator());
                 Client += temp;
-                String val = DirCreator.changedModelClassPath(currentAtt.getNodeValue());
+                String val = DirCreator.changedModelClassPath(currentAtt.getNodeValue(), app);
                 ViewObjectAdf.setAttribute(currentAtt.getNodeName(), val);
             } else if (currentAtt.getNodeName().equals("RowInterface")) {
                 String temp = currentAtt.getNodeValue();
                 temp = temp.replace(".", FileReaderWritter.getSeparator());
                 RowInterface += temp;
-                String val = DirCreator.changedModelClassPath(currentAtt.getNodeValue());
+                String val = DirCreator.changedModelClassPath(currentAtt.getNodeValue(), app);
                 ViewObjectAdf.setAttribute(currentAtt.getNodeName(), val);
             } else if (currentAtt.getNodeName().equals("Name"))
                 ViewObjectAdf.setAttribute(currentAtt.getNodeName(), currentAtt.getNodeValue());
@@ -98,7 +100,7 @@ public class VOXml {
                     String temp = currentAtt.getNodeValue();
                     temp = temp.replace(".", FileReaderWritter.getSeparator());
                     RowClassPath += temp;
-                    val = DirCreator.changedModelClassPath(currentAtt.getNodeValue());
+                    val = DirCreator.changedModelClassPath(currentAtt.getNodeValue(), app);
                 }
                 ViewObjectAdf.setAttribute(currentAtt.getNodeName(), val);
             }
@@ -132,7 +134,7 @@ public class VOXml {
                         String strAttr = currentAtt.getName();
                         if (strAttr.equals("Entity")) {
                             String val = currentAtt.getValue();
-                            val = DirCreator.changedModelClassPath(val);
+                            val = DirCreator.changedModelClassPath(val, app);
                             currentAtt.setValue(val);
                         }
                     }
@@ -183,22 +185,36 @@ public class VOXml {
         LABEL.setAttribute("ResId", impVal + voName + "_LABEL");
         String contents = impVal + voName + "_LABEL=" + voName;
         FileReaderWritter.appendFile(contents,
-                                     pathModelsrc + FileReaderWritter.getSeparator() + "ModelBundle.properties");
+                                     pathModelsrc + FileReaderWritter.getSeparator() + "ModelBundle.properties", app);
         SchemaBasedProperties.appendChild(LABEL);
         Properties.appendChild(SchemaBasedProperties);
         ViewObjectAdf.appendChild(Properties);
 
         // jpx
-        JPXGen.checkContainee(impVal.substring(0, impVal.lastIndexOf(".")), pathModelsrc);
+        JPXGen.checkContainee(impVal.substring(0, impVal.lastIndexOf(".")), pathModelsrc, app);
 
         // write files
-        FileReaderWritter.writeXMLFile(adfDoc, destination);
+        FileReaderWritter.writeXMLFile(adfDoc, destination, app);
 
         System.out.println("End Conv: handleVOXml ");
     }
 
+    /**
+     *
+     * @param voPath
+     * @param bindingAttr
+     * @param lovVO
+     * @param lovAttr
+     * @param controlTypeVal
+     * @throws Exception
+     */
     public static void addLovDetails(String voPath, String bindingAttr, String lovVO, String lovAttr,
-                                     String controlTypeVal) throws Exception {
+                                     String controlTypeVal, String app) throws Exception {
+        System.out.println("Start Conv: addLovDetails " + voPath + " " + bindingAttr + " " + lovVO + " " + lovAttr +
+                           " " + controlTypeVal + " " + app);
+        ErrorAndLog.handleLog(app,
+                              "Start Conv: addLovDetails " + voPath + " " + bindingAttr + " " + lovVO + " " + lovAttr +
+                              " " + controlTypeVal + " " + app);
         File adfVO = new File(voPath);
         DocumentBuilderFactory newDbFactory = DocumentBuilderFactory.newInstance();
         newDbFactory.setValidating(false);
@@ -209,9 +225,9 @@ public class VOXml {
         ViewObjectAdf.appendChild(viewAccessor);
         String tempLovVOPath;
         if (lovVO != null) {
-            lovVO = lovVO.replace(".xml","");
-            tempLovVOPath = lovVO.substring(lovVO.indexOf("src")+4).replace("\\", ".");
-            lovVO = lovVO.substring(lovVO.lastIndexOf("\\")+1);
+            lovVO = lovVO.replace(".xml", "");
+            tempLovVOPath = lovVO.substring(lovVO.indexOf("src") + 4).replace(FileReaderWritter.getSeparator(), ".");
+            lovVO = lovVO.substring(lovVO.lastIndexOf(FileReaderWritter.getSeparator()) + 1);
         } else {
             return;
         }
@@ -345,10 +361,8 @@ public class VOXml {
                 }
             }
         }
-
-        // String destination = FileReaderWritter.getModelDestinationPath(path, app, dest, src);
-
-        FileReaderWritter.writeXMLFile(adfDoc, voPath);
+        FileReaderWritter.writeXMLFile(adfDoc, voPath, app);
+        System.out.println("End Conv: addLovDetails ");
     }
 
     /**
@@ -358,8 +372,9 @@ public class VOXml {
      * @param src
      * @throws Exception
      */
-    private static void createVOXml(String dest, String repo) throws Exception {
-        System.out.println("Start Conv: createVOXml " + dest + " " + repo);
+    private static void createVOXml(String dest, String repo, String app) throws Exception {
+        System.out.println("Start Conv: createVOXml " + dest + " " + repo + " " + app);
+        ErrorAndLog.handleLog(app, "Start Conv: createVOXml " + dest + " " + repo + " " + app);
         String contents =
             "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n" + "<!DOCTYPE ViewObject SYSTEM \"jbo_03_01.dtd\">" + "" +
             "<ViewObject" + "  xmlns=\"http://xmlns.oracle.com/bc4j\"" + "  Version=\"12.1.3.10.47\"" +
@@ -370,8 +385,8 @@ public class VOXml {
             "  </DesignTime>" + "  <ResourceBundle>\n" + "    <PropertiesBundle\n" +
             "      PropertiesFile=\"model.ModelBundle\"/>\n" + "  </ResourceBundle>\n" + "</ViewObject>";
 
-        DirCreator.copyADFDTD(repo, dest);
-        FileReaderWritter.writeFile(contents, dest);
+        DirCreator.copyADFDTD(repo, dest, app);
+        FileReaderWritter.writeFile(contents, dest, app);
         System.out.println("End Conv: createVOXml ");
     }
 }

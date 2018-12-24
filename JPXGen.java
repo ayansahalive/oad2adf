@@ -1,10 +1,16 @@
 package conv;
 
-import java.io.*;
+import java.io.File;
 
-import javax.xml.parsers.*;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
 
-import org.w3c.dom.*;
+import org.w3c.dom.Attr;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NamedNodeMap;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 
 public class JPXGen {
@@ -18,11 +24,12 @@ public class JPXGen {
      * @param pathModelsrc
      * @throws Exception
      */
-    protected static void checkContainee(String pkg, String pathModelsrc) throws Exception {
-        System.out.println("Start Conv: checkContainee " + pkg + " " + pathModelsrc);
-        int count = countContainee(pkg, pathModelsrc);
+    protected static void checkContainee(String pkg, String pathModelsrc, String app) throws Exception {
+        System.out.println("Start Conv: checkContainee " + pkg + " " + pathModelsrc + " " + app);
+        ErrorAndLog.handleLog(app, "Start Conv: checkContainee " + pkg + " " + pathModelsrc + " " + app);
+        int count = countContainee(pkg, pathModelsrc, app);
         if (count == 0)
-            addContainee(pkg, pathModelsrc, pkg.substring(pkg.lastIndexOf(".")));
+            addContainee(pkg, pathModelsrc, pkg.substring(pkg.lastIndexOf(".")), app);
         System.out.println("End Conv: checkContainee");
     }
 
@@ -33,8 +40,9 @@ public class JPXGen {
      * @param name
      * @throws Exception
      */
-    private static void addContainee(String pkg, String pathModelsrc, String name) throws Exception {
-        System.out.println("Start Conv: addContainee " + pkg + " " + pathModelsrc + " " + name);
+    private static void addContainee(String pkg, String pathModelsrc, String name, String app) throws Exception {
+        System.out.println("Start Conv: addContainee " + pkg + " " + pathModelsrc + " " + name + " " + app);
+        ErrorAndLog.handleLog(app, "Start Conv: addContainee " + pkg + " " + pathModelsrc + " " + name + " " + app);
         File jpx = new File(pathModelsrc + FileReaderWritter.getSeparator() + "Model.jpx");
         DocumentBuilderFactory fact = DocumentBuilderFactory.newInstance();
         fact.setValidating(false);
@@ -71,7 +79,7 @@ public class JPXGen {
         Containee.appendChild(DesignTime);
         JboProject.appendChild(Containee);
 
-        FileReaderWritter.writeXMLFile(jpxDoc, pathModelsrc + FileReaderWritter.getSeparator() + "Model.jpx");
+        FileReaderWritter.writeXMLFile(jpxDoc, pathModelsrc + FileReaderWritter.getSeparator() + "Model.jpx", app);
         System.out.println("End Conv: addContainee");
     }
 
@@ -82,8 +90,9 @@ public class JPXGen {
      * @return
      * @throws Exception
      */
-    private static int countContainee(String pkg, String pathModelsrc) throws Exception {
-        System.out.println("Start Conv: countContainee " + pkg + " " + pathModelsrc);
+    private static int countContainee(String pkg, String pathModelsrc, String app) throws Exception {
+        System.out.println("Start Conv: countContainee " + pkg + " " + pathModelsrc + " " + app);
+        ErrorAndLog.handleLog(app, "Start Conv: countContainee " + pkg + " " + pathModelsrc + " " + app);
         int count = 0;
         File jpx = new File(pathModelsrc + FileReaderWritter.getSeparator() + "Model.jpx");
         DocumentBuilderFactory fact = DocumentBuilderFactory.newInstance();

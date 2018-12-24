@@ -1,11 +1,14 @@
 package conv;
 
-import java.io.*;
-import java.io.IOException;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.StringReader;
 
-import javax.xml.parsers.*;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
 
-import org.w3c.dom.*;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 
 
 public class BeanGen {
@@ -14,13 +17,15 @@ public class BeanGen {
     }
 
     /**
-     *
+     * Temp class
      * @param pgName
      * @param pathVC
+     * @param app
      * @throws Exception
      */
-    protected static void createBean(String pgName, String pathVC) throws Exception {
-        System.out.println("Start Conv: createBean " + pgName + " " + pathVC);
+    protected static void createBean(String pgName, String pathVC, String app) throws Exception {
+        System.out.println("Start Conv: createBean " + pgName + " " + pathVC + " " + app);
+        ErrorAndLog.handleLog(app, "Start Conv: createBean " + pgName + " " + pathVC + " " + app);
         String bean =
             "package view.backing;\n" + "" + "import oracle.adf.view.rich.component.rich.RichDocument;\n" +
             "import oracle.adf.view.rich.component.rich.RichForm;\n" +
@@ -37,23 +42,27 @@ public class BeanGen {
             "    public void setS1(RichSeparator s1) {\n" + "        this.s1 = s1;\n" + "    }\n\n" + "" +
             "    public RichSeparator getS1() {\n" + "        return s1;\n" + "    }\n" + "}";
 
-        FileReaderWritter.writeFile(bean, pathVC);
+        FileReaderWritter.writeFile(bean, pathVC, app);
         System.out.println("End Conv: createBean ");
     }
 
     /**
-     *
+     * getter and setters of beans
      * @param itemName
      * @param itemType
      * @param path
      * @param imports
+     * @param app
      * @throws Exception
      */
-    protected static void createGetterSetter(String itemName, String itemType, String path,
-                                             String imports) throws Exception {
-        System.out.println("Start Conv: createGetterSetter " + itemName + " " + itemType + " " + path + " " + imports);
-        //        try {
-        String contents = FileReaderWritter.getCharContents(path);
+    protected static void createGetterSetter(String itemName, String itemType, String path, String imports,
+                                             String app) throws Exception {
+        System.out.println("Start Conv: createGetterSetter " + itemName + " " + itemType + " " + path + " " + imports +
+                           " " + app);
+        ErrorAndLog.handleLog(app,
+                              "Start Conv: createGetterSetter " + itemName + " " + itemType + " " + path + " " +
+                              imports + " " + app);
+        String contents = FileReaderWritter.getCharContents(path, app);
         int importLoc = contents.indexOf(";") + 1;
 
         String getter =
@@ -79,21 +88,21 @@ public class BeanGen {
         contents = temp;
         temp = "";
 
-        FileReaderWritter.writeFile(contents, path);
+        FileReaderWritter.writeFile(contents, path, app);
         System.out.println("End Conv: createGetterSetter ");
-        //        } catch (Exception e) {
-        //            throw e;
-        //        }
     }
 
     /**
-     *
+     * Action listener of event
      * @param content
      * @param path
+     * @param app
      * @throws Exception
      */
-    protected static void createActionListener(String content, String path) throws Exception {
-        String contents = FileReaderWritter.getCharContents(path);
+    protected static void createActionListener(String content, String path, String app) throws Exception {
+        System.out.println("Start Conv: createActionListener " + path + " " + app);
+        ErrorAndLog.handleLog(app, "Start Conv: createActionListener " + path + " " + app);
+        String contents = FileReaderWritter.getCharContents(path, app);
         int importLoc = contents.indexOf(";") + 1;
 
         String alContent = "public void " + content + "(ActionEvent actionEvent) {\n }\n";
@@ -108,18 +117,21 @@ public class BeanGen {
         temp = "";
         temp = contents.substring(0, lastBrace) + alContent + contents.substring(lastBrace);
         contents = temp;
-        FileReaderWritter.writeFile(contents, path);
+        FileReaderWritter.writeFile(contents, path, app);
         System.out.println("End Conv: createActionListener ");
     }
 
     /**
-     *
+     * Value change listener of events
      * @param content
      * @param path
+     * @param app
      * @throws Exception
      */
-    protected static void createValueChangeListener(String content, String path) throws Exception {
-        String contents = FileReaderWritter.getCharContents(path);
+    protected static void createValueChangeListener(String content, String path, String app) throws Exception {
+        System.out.println("Start Conv: createValueChangeListener " + path + " " + app);
+        ErrorAndLog.handleLog(app, "Start Conv: createValueChangeListener " + path + " " + app);
+        String contents = FileReaderWritter.getCharContents(path, app);
         int importLoc = contents.indexOf(";") + 1;
 
         String alContent = "public void " + content + "(ValueChangeEvent valueChangeEvent) {\n }\n";
@@ -134,36 +146,44 @@ public class BeanGen {
         temp = "";
         temp = contents.substring(0, lastBrace) + alContent + contents.substring(lastBrace);
         contents = temp;
-        FileReaderWritter.writeFile(contents, path);
-        System.out.println("End Conv: createActionListener ");
+        FileReaderWritter.writeFile(contents, path, app);
+        System.out.println("End Conv: createValueChangeListener ");
     }
 
-    private static void createDataBindings() {
-
-    }
-
-    private static String placeImports(String contents, String importStmt) throws Exception {
-        //String contents = FileReaderWritter.getCharContents(path);
+    /**
+     * Imnports
+     * @param contents
+     * @param importStmt
+     * @param app
+     * @return
+     * @throws Exception
+     */
+    private static String placeImports(String contents, String importStmt, String app) throws Exception {
+        System.out.println("Start Conv: placeImports " + importStmt + " " + app);
+        ErrorAndLog.handleLog(app, "Start Conv: placeImports " + importStmt + " " + app);
         int importLoc = contents.indexOf(";") + 1;
-
         String temp = "";
         if (!contents.contains("import oracle.jbo.JboException")) {
             temp = contents.substring(0, importLoc) + "\n" + importStmt + contents.substring(importLoc);
             contents = temp;
         }
+        System.out.println("End Conv: placeImports ");
         return contents;
     }
 
     /**
-     *
+     * Config XML handle
      * @param pathVC
      * @param pgName
+     * @param beanPath
      * @throws Exception
      */
-    protected static void createAdfConfig(String pathVC, String pgName, String beanPath) throws Exception {
-        System.out.println("Start Conv: createAdfConfig " + pathVC + " " + pgName);
-        //        try {
-        File inputFile = new File(pathVC + "\\public_html\\WEB-INF\\adfc-config.xml");
+    protected static void createAdfConfig(String pathVC, String pgName, String beanPath, String app) throws Exception {
+        System.out.println("Start Conv: createAdfConfig " + pathVC + " " + pgName + " " + beanPath + " " + app);
+        ErrorAndLog.handleLog(app, "Start Conv: createAdfConfig " + pathVC + " " + pgName + " " + beanPath + " " + app);
+        File inputFile =
+            new File(pathVC + FileReaderWritter.getSeparator() + "public_html" + FileReaderWritter.getSeparator() +
+                     "WEB-INF" + FileReaderWritter.getSeparator() + "adfc-config.xml");
         DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
         DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
         Document doc = dBuilder.parse(inputFile);
@@ -183,29 +203,30 @@ public class BeanGen {
         bean.appendChild(beanClass);
         bean.appendChild(beanScope);
 
-        FileReaderWritter.writeXMLFile(doc, pathVC + "\\public_html\\WEB-INF\\adfc-config.xml");
+        FileReaderWritter.writeXMLFile(doc,
+                                       pathVC + FileReaderWritter.getSeparator() + "public_html" +
+                                       FileReaderWritter.getSeparator() + "WEB-INF" + FileReaderWritter.getSeparator() +
+                                       "adfc-config.xml", app);
         System.out.println("End Conv: createAdfConfig ");
-        //        } catch (Exception e) {
-        //            throw e;
-        //        }
     }
 
     /**
-     *
+     * Copy OAF CO PFR
      * @param path
      * @param app
-     * @param dest
-     * @param src
+     * @param beanPath
+     * @param coPath
+     * @throws Exception
      */
-    protected static void copyProcessFormRequest(String path, String app, String beanPath) throws Exception {
-        //        try {
-        //System.out.println("Start Conv: copyProcessFormRequest " + path + " " + app + " " + dest + " " + src);
-        ErrorAndLog.handleLog(app, "converting " + path);
-        String coPath = path.replace("PG.xml", "CO.java");
-        String pageName = path.substring(path.lastIndexOf("\\"));
+    protected static void copyProcessFormRequest(String path, String app, String beanPath,
+                                                 String coPath) throws Exception {
+        System.out.println("Start Conv: copyProcessFormRequest " + path + " " + app + " " + beanPath + " " + coPath);
+        ErrorAndLog.handleLog(app,
+                              "Start Conv: copyProcessFormRequest " + path + " " + app + " " + beanPath + " " + coPath);
+        String pageName = path.substring(path.lastIndexOf(FileReaderWritter.getSeparator()));
         pageName = pageName.replace(".xml", "");
         String str = "";
-        str = FileReaderWritter.getCharContents(coPath);
+        str = FileReaderWritter.getCharContents(coPath, app);
 
         str = str.subSequence(str.indexOf("{") + 1, str.lastIndexOf("}")).toString();
 
@@ -226,7 +247,6 @@ public class BeanGen {
                 line = s[0] + "get" + tempStr + "().setValue(" + s[1].substring(s[1].indexOf(",") + 1);
             } else if (line != null && line.contains("forwardImmediatelyToCurrentPage(")) {
                 line = "//" + line;
-                System.out.println(line.lastIndexOf(");"));
                 if (line.lastIndexOf(");") == -1) {
                     ret = ret + line + "\n";
                     line = reader.readLine();
@@ -244,11 +264,13 @@ public class BeanGen {
                 line = s[0] + "get" + tempStr + "()" + s[1].substring(s[1].indexOf(")") + 1);
             } else if (line != null && line.contains("new OAException(")) {
                 if (line.lastIndexOf(");") == -1) {
-                    line = line.substring(0, line.lastIndexOf(","));
-                    ret = ret + line + "\n";
-                    line = reader.readLine();
-                    if (line.contains("OAException.ERROR")) {
-                        line = line.replace("OAException.ERROR", "");
+                    if (-1 != line.lastIndexOf(",")) { // mod new
+                        line = line.substring(0, line.lastIndexOf(","));
+                        ret = ret + line + "\n";
+                        line = reader.readLine();
+                        if (line.contains("OAException.ERROR")) {
+                            line = line.replace("OAException.ERROR", "");
+                        }
                     }
                 } else {
                     if (line.contains(", OAException.ERROR")) {
@@ -259,25 +281,16 @@ public class BeanGen {
                 }
             }
         }
-        System.out.println(ret);
         if (reader != null) {
             reader.close();
         }
 
-        String jsfStr = FileReaderWritter.getCharContents(beanPath);
+        String jsfStr = FileReaderWritter.getCharContents(beanPath, app);
         jsfStr = jsfStr.subSequence(0, jsfStr.lastIndexOf("}")).toString();
         jsfStr = jsfStr + ret + "}";
-        System.out.println("jsfBean Path::::" + beanPath);
-        jsfStr = placeImports(jsfStr, "import oracle.jbo.JboException;");
-        FileReaderWritter.writeFile(jsfStr, beanPath);
-        DirCreator.WebBeanReplacements(beanPath);
-        //        } catch (IOException ioe) {
-        //            // TODO: Add catch code
-        //            ioe.printStackTrace();
-        //        } catch (Exception e) {
-        //            // TODO: Add catch code
-        //            e.printStackTrace();
-        //        }
+        jsfStr = placeImports(jsfStr, "import oracle.jbo.JboException;", app);
+        FileReaderWritter.writeFile(jsfStr, beanPath, app);
+        DirCreator.WebBeanReplacements(beanPath, app);
+        System.out.println("End Conv: copyProcessFormRequest");
     }
-
 }

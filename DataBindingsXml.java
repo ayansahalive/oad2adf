@@ -1,33 +1,45 @@
 package conv;
 
 import java.io.File;
-import java.io.IOException;
 
 import java.util.StringTokenizer;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
 
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
-
 import org.w3c.dom.Element;
-
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-
-import org.xml.sax.SAXException;
 
 public class DataBindingsXml {
     public DataBindingsXml() {
         super();
     }
 
+    /**
+     * databindings XML handle
+     * @param dest
+     * @param app
+     * @param pgName
+     * @param filePath
+     * @param amDef
+     * @param packagePath
+     * @throws Exception
+     */
     public static void handleDataBindingsPage(String dest, String app, String pgName, String filePath, String amDef,
                                               String packagePath) throws Exception {
-        String dbPage = dest + "\\" + app + "\\ViewController\\adfmsrc\\view\\DataBindings.cpx";
+        System.out.println("Start Conv: handleDataBindingsPage " + dest + " " + app + " " + pgName + " " + filePath +
+                           " " + amDef + " " + packagePath);
+        ErrorAndLog.handleLog(app,
+                              "Start Conv: handleDataBindingsPage " + dest + " " + app + " " + pgName + " " + filePath +
+                              " " + amDef + " " + packagePath);
+        String dbPage =
+            dest + FileReaderWritter.getSeparator() + app + FileReaderWritter.getSeparator() + "ViewController" +
+            FileReaderWritter.getSeparator() + "adfmsrc" + FileReaderWritter.getSeparator() + "view" +
+            FileReaderWritter.getSeparator() + "DataBindings.cpx";
         DocumentBuilderFactory newDbFactory = DocumentBuilderFactory.newInstance();
         newDbFactory.setValidating(false);
         DocumentBuilder newDBuilder = newDbFactory.newDocumentBuilder();
@@ -41,7 +53,8 @@ public class DataBindingsXml {
                 node.appendChild(pageDtls);
 
                 Attr binds = dbPageDoc.createAttribute("path");
-                binds.setValue("/view/" + packagePath.replace("\\", "/") + "/" + pgName + ".jsf");
+                binds.setValue("/view/" + packagePath.replace(FileReaderWritter.getSeparator(), "/") + "/" + pgName +
+                               ".jsf");
                 binds.normalize();
                 pageDtls.setAttributeNode(binds);
 
@@ -56,7 +69,7 @@ public class DataBindingsXml {
                 Attr binds = dbPageDoc.createAttribute("path");
                 StringBuilder pathVal = new StringBuilder();
                 filePath = filePath.substring(filePath.indexOf("src") + 4);
-                StringTokenizer strToken = new StringTokenizer(filePath, "\\");
+                StringTokenizer strToken = new StringTokenizer(filePath, FileReaderWritter.getSeparator());
                 while (strToken.hasMoreTokens()) {
                     String token = strToken.nextToken();
                     if (!token.contains(".xml")) {
@@ -158,19 +171,7 @@ public class DataBindingsXml {
                 }
             }
         }
-        FileReaderWritter.writeXMLFile(dbPageDoc, dbPage);
+        FileReaderWritter.writeXMLFile(dbPageDoc, dbPage, app);
+        System.out.println("End Conv: handleDataBindingsPage");
     }
-
-    //    public static void main(String[] args) {
-    //        File file = new File("D:\\Converter\\ADF\\hello\\ViewController\\src\\view\\pageDefs\\helloPGPageDef.xml");
-    //        System.out.println(file.getAbsolutePath());
-    //        String filePath = file.getAbsolutePath();
-    //        filePath = filePath.substring(filePath.indexOf("src")+4);
-    //        StringTokenizer strToken = new StringTokenizer(filePath, "\\");
-    //        while(strToken.hasMoreTokens()) {
-    //            String token = strToken.nextToken();
-    //            System.out.println(token);
-    //        }
-    //
-    //   }
 }

@@ -1,10 +1,16 @@
 package conv;
 
-import java.io.*;
+import java.io.File;
 
-import javax.xml.parsers.*;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
 
-import org.w3c.dom.*;
+import org.w3c.dom.Attr;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NamedNodeMap;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 
 public class VLXml {
@@ -21,8 +27,8 @@ public class VLXml {
      * @throws Exception
      */
     protected static void handleVLXml(String path, String app, String dest, String repo, String src) throws Exception {
-        System.out.println("Start Conv: handleVLXml " + path + " " + app + " " + dest + " " + repo);
-        ErrorAndLog.handleLog(app, "converting " + path);
+        System.out.println("Start Conv: handleVLXml " + path + " " + app + " " + dest + " " + repo + " " + src);
+        ErrorAndLog.handleLog(app, "Start Conv: handleVLXml " + path + " " + app + " " + dest + " " + repo + " " + src);
         String name = path.substring(path.lastIndexOf(FileReaderWritter.getSeparator()) + 1);
         String vlName = name.replace(".xml", "");
         String topApp = dest + FileReaderWritter.getSeparator() + app;
@@ -31,7 +37,7 @@ public class VLXml {
             pathModel + FileReaderWritter.getSeparator() + "src" + FileReaderWritter.getSeparator() + "model";
         String destination = FileReaderWritter.getModelDestinationPath(path, app, dest, src);
 
-        createVLXml(destination, repo);
+        createVLXml(destination, repo, app);
 
         File oafVL = new File(path); // OAF
         DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
@@ -75,7 +81,7 @@ public class VLXml {
                 for (int j = 0; j < childAttrs.getLength(); j++) {
                     Attr att = (Attr) childAttrs.item(j);
                     if (att.getName().equals("Owner")) {
-                        String val = DirCreator.changedModelClassPath(att.getValue());
+                        String val = DirCreator.changedModelClassPath(att.getValue(), app);
                         att.setValue(val);
                     }
                 }
@@ -92,7 +98,8 @@ public class VLXml {
                                     Attr attrItem = (Attr) attrList.item(m);
                                     if (attrItem.getName().equals("Value")) {
                                         String val =
-                                            DirCreator.changedModelClassPath(attrItem.getValue()); // changedVLAOClassPath
+                                            DirCreator.changedModelClassPath(attrItem.getValue(),
+                                                                             app); // changedVLAOClassPath
                                         attrItem.setValue(val);
                                     }
                                 }
@@ -121,16 +128,16 @@ public class VLXml {
         LABEL.setAttribute("ResId", impVal + vlName + "_LABEL");
         String contents = impVal + vlName + "_LABEL=" + vlName;
         FileReaderWritter.appendFile(contents,
-                                     pathModelsrc + FileReaderWritter.getSeparator() + "ModelBundle.properties");
+                                     pathModelsrc + FileReaderWritter.getSeparator() + "ModelBundle.properties", app);
         SchemaBasedProperties.appendChild(LABEL);
         Properties.appendChild(SchemaBasedProperties);
         ViewLinkAdf.appendChild(Properties);
 
         // jpx
-        JPXGen.checkContainee(impVal.substring(0, impVal.lastIndexOf(".")), pathModelsrc);
+        JPXGen.checkContainee(impVal.substring(0, impVal.lastIndexOf(".")), pathModelsrc, app);
 
         // write files
-        FileReaderWritter.writeXMLFile(adfDoc, destination);
+        FileReaderWritter.writeXMLFile(adfDoc, destination, app);
 
         System.out.println("End Conv: handleVLXml ");
     }
@@ -141,8 +148,9 @@ public class VLXml {
      * @param repo
      * @throws Exception
      */
-    private static void createVLXml(String dest, String repo) throws Exception {
+    private static void createVLXml(String dest, String repo, String app) throws Exception {
         System.out.println("Start Conv: createAOXml " + dest + " " + repo);
+        ErrorAndLog.handleLog(app, "Start Conv: createAOXml " + dest + " " + repo);
         String contents =
             "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>" + "<!DOCTYPE ViewLink SYSTEM \"jbo_03_01.dtd\">" +
             "<ViewLink" + "  xmlns=\"http://xmlns.oracle.com/bc4j\"" + "  Name=\"VLAB\"" +
@@ -150,8 +158,8 @@ public class VLXml {
             "    <PropertiesBundle" + "      PropertiesFile=\"model.ModelBundle\"/>" +
             "  </ResourceBundle> </ViewLink>";
 
-        DirCreator.copyADFDTD(repo, dest);
-        FileReaderWritter.writeFile(contents, dest);
+        DirCreator.copyADFDTD(repo, dest, app);
+        FileReaderWritter.writeFile(contents, dest, app);
         System.out.println("End Conv: createAOXml ");
     }
 }

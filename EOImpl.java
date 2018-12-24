@@ -1,6 +1,7 @@
 package conv;
 
-import java.util.*;
+import java.util.List;
+import java.util.Vector;
 
 
 public class EOImpl {
@@ -9,18 +10,19 @@ public class EOImpl {
     }
 
     /**
-     * convert EOImpl
+     * EO Class handle
      * @param path
      * @param app
      * @param dest
+     * @param src
      * @throws Exception
      */
     protected static void handleEOImpl(String path, String app, String dest, String src) throws Exception {
-        System.out.println("Start Conv: handleEOImpl " + path + " " + app + " " + dest);
-        ErrorAndLog.handleLog(app, "converting " + path);
+        System.out.println("Start Conv: handleEOImpl " + path + " " + app + " " + dest + " " + src);
+        ErrorAndLog.handleLog(app, "Start Conv: handleEOImpl " + path + " " + app + " " + dest + " " + src);
 
         JavaCodeExtractor obj = new JavaCodeExtractor();
-        List<String> vec = obj.start(path);
+        List<String> vec = obj.start(path, app);
         String str = "";
 
         Vector attrVec = new Vector();
@@ -29,7 +31,7 @@ public class EOImpl {
             String contents = vec.get(i) + "";
             if (i == 0) {
                 // change references
-                String changed = DirCreator.replaceImports(contents);
+                String changed = DirCreator.replaceImports(contents, app);
                 vec.set(i, changed);
                 contents = vec.get(i) + "";
             }
@@ -38,7 +40,7 @@ public class EOImpl {
             } else if (contents.contains("public static final int")) {
                 String attr =
                     contents.subSequence(contents.indexOf("int") + 3, contents.indexOf("=")).toString().trim();
-                attr = FileReaderWritter.toInitCap(attr);
+                attr = FileReaderWritter.toInitCap(attr, app);
                 String temp =
                     (contents.substring(0, contents.indexOf("=")) + " = AttributesEnum." + attr + ".index();").trim();
                 vec.set(i, temp);
@@ -47,33 +49,35 @@ public class EOImpl {
             str = str + "\n" + vec.get(i) + "";
         }
 
-        String accessor = generateEnumeration(attrVec);
+        String accessor = generateEnumeration(attrVec, app);
         str = str.substring(0, str.lastIndexOf("}")) + accessor + "}";
-        
+
         // handle logging
         String name = path.substring(path.lastIndexOf(FileReaderWritter.getSeparator()) + 1);
         String className = name.replace(".java", "");
-        String newMethods = DirCreator.addMethods(className);
+        String newMethods = DirCreator.addMethods(className, app);
         str = str.subSequence(0, str.lastIndexOf("}")).toString();
-        str = str + newMethods+"}";
+        str = str + newMethods + "}";
 
         // write a new file
         String destination = FileReaderWritter.getModelDestinationPath(path, app, dest, src);
 
-        FileReaderWritter.writeFile(str, destination);
-        
-        DirCreator.replacements(destination);
+        FileReaderWritter.writeFile(str, destination, app);
+
+        DirCreator.replacements(destination, app);
 
         System.out.println("End Conv: handleEOImpl ");
     }
 
     /**
-     * generate enumeration for row indices
+     * Enumerations
      * @param attrVec
+     * @param app
      * @return
      */
-    private static String generateEnumeration(Vector attrVec) {
+    private static String generateEnumeration(Vector attrVec, String app) {
         System.out.println("Start Conv: generateEnumeration ");
+        ErrorAndLog.handleLog(app, "Start Conv: generateEnumeration ");
         String strHead = "public enum AttributesEnum {";
 
         String strBody = "";
@@ -97,17 +101,18 @@ public class EOImpl {
     }
 
     /**
-     * convert EOdefinition
+     * EO Def Calss handle
      * @param path
      * @param app
      * @param dest
+     * @param src
      * @throws Exception
      */
     protected static void handleEODef(String path, String app, String dest, String src) throws Exception {
-        System.out.println("Start Conv: handleEODef " + path + " " + app + " " + dest);
-        ErrorAndLog.handleLog(app, "converting " + path);
+        System.out.println("Start Conv: handleEODef " + path + " " + app + " " + dest + " " + src);
+        ErrorAndLog.handleLog(app, "Start Conv: handleEODef " + path + " " + app + " " + dest + " " + src);
         String str = "";
-        str = FileReaderWritter.getCharContents(path);
+        str = FileReaderWritter.getCharContents(path, app);
         // handle multiline comments
         int start = -1;
         int end = -1;
@@ -118,39 +123,40 @@ public class EOImpl {
         }
 
         String tempStr = str.substring(0, str.indexOf("{"));
-        String changed = DirCreator.replaceImports(tempStr);
+        String changed = DirCreator.replaceImports(tempStr, app);
         str = changed + str.substring(str.indexOf("{"));
-        
+
         // handle logging
         String name = path.substring(path.lastIndexOf(FileReaderWritter.getSeparator()) + 1);
         String className = name.replace(".java", "");
-        String newMethods = DirCreator.addMethods(className);
+        String newMethods = DirCreator.addMethods(className, app);
         str = str.subSequence(0, str.lastIndexOf("}")).toString();
-        str = str + newMethods+"}";
+        str = str + newMethods + "}";
 
         // write a new file
         String destination = FileReaderWritter.getModelDestinationPath(path, app, dest, src);
 
-        FileReaderWritter.writeFile(str, destination);
-        
-        DirCreator.replacements(destination);
+        FileReaderWritter.writeFile(str, destination, app);
+
+        DirCreator.replacements(destination, app);
 
         System.out.println("End Conv: handleEODef ");
     }
 
     /**
-     * convert EO COl
+     * ADF EO mods
      * @param path
      * @param app
      * @param dest
+     * @param src
      * @throws Exception
      */
     protected static void handleEOCol(String path, String app, String dest, String src) throws Exception {
-        System.out.println("Start Conv: handleEOCol " + path + " " + app + " " + dest);
-        ErrorAndLog.handleLog(app, "converting " + path);
+        System.out.println("Start Conv: handleEOCol " + path + " " + app + " " + dest + " " + src);
+        ErrorAndLog.handleLog(app, "Start Conv: handleEOCol " + path + " " + app + " " + dest + " " + src);
         String str = "";
 
-        str = FileReaderWritter.getCharContents(path);
+        str = FileReaderWritter.getCharContents(path, app);
         // handle multiline comments
         int start = -1;
         int end = -1;
@@ -161,22 +167,22 @@ public class EOImpl {
         }
 
         String tempStr = str.substring(0, str.indexOf("{"));
-        String changed = DirCreator.replaceImports(tempStr);
+        String changed = DirCreator.replaceImports(tempStr, app);
         str = changed + str.substring(str.indexOf("{"));
-        
+
         // handle logging
         String name = path.substring(path.lastIndexOf(FileReaderWritter.getSeparator()) + 1);
         String className = name.replace(".java", "");
-        String newMethods = DirCreator.addMethods(className);
+        String newMethods = DirCreator.addMethods(className, app);
         str = str.subSequence(0, str.lastIndexOf("}")).toString();
-        str = str + newMethods+"}";
+        str = str + newMethods + "}";
 
         // write a new file
         String destination = FileReaderWritter.getModelDestinationPath(path, app, dest, src);
 
-        FileReaderWritter.writeFile(str, destination);
-        
-        DirCreator.replacements(destination);
+        FileReaderWritter.writeFile(str, destination, app);
+
+        DirCreator.replacements(destination, app);
 
         System.out.println("End Conv: handleEOCol ");
     }

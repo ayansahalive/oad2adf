@@ -1,10 +1,13 @@
 package conv;
 
-import java.io.*;
+import java.io.File;
 
-import javax.xml.parsers.*;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
 
-import org.w3c.dom.*;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 
 
 public class BC4JGen {
@@ -13,14 +16,15 @@ public class BC4JGen {
     }
 
     /**
-     * handle bc4j entry for AM
+     * BC4J XML Handle
      * @param dest
      * @param repo
+     * @param app
      * @throws Exception
      */
     protected static void handleBC4J(String dest, String repo, String app) throws Exception { // dest is the AMXML name
         System.out.println("Start Conv: handleBC4J " + dest + " " + repo + " " + app);
-
+        ErrorAndLog.handleLog(app, "Start Conv: handleBC4J " + dest + " " + repo + " " + app);
         String destTemp = dest.substring(0, dest.lastIndexOf(FileReaderWritter.getSeparator()));
         String amName = dest.substring(dest.lastIndexOf(FileReaderWritter.getSeparator()) + 1);
         amName = amName.replace(".xml", "");
@@ -32,20 +36,21 @@ public class BC4JGen {
         if (f.exists() && !f.isDirectory()) {
             appendBC4J(amName, destTemp, app);
         } else {
-            createBC4J(destTemp, repo);
+            createBC4J(destTemp, repo, app);
             appendBC4J(amName, destTemp, app);
         }
     }
 
     /**
-     * create a blank one
+     * Temp
      * @param dest
      * @param repo
+     * @param app
      * @throws Exception
      */
-    private static void createBC4J(String dest, String repo) throws Exception {
+    private static void createBC4J(String dest, String repo, String app) throws Exception {
         System.out.println("Start Conv: createBC4J " + dest + " " + repo);
-
+        ErrorAndLog.handleLog(app, "Start Conv: createBC4J " + dest + " " + repo);
         String src =
             repo + FileReaderWritter.getSeparator() + "testApp" + FileReaderWritter.getSeparator() + "Model" +
             FileReaderWritter.getSeparator() + "src" + FileReaderWritter.getSeparator() + "model" +
@@ -53,19 +58,20 @@ public class BC4JGen {
 
         FileReaderWritter.copyFile(src,
                                    dest + FileReaderWritter.getSeparator() + "common" +
-                                   FileReaderWritter.getSeparator() + "bc4j.xcfg");
+                                   FileReaderWritter.getSeparator() + "bc4j.xcfg", app);
         System.out.println("End Conv: createBC4J ");
     }
 
     /**
-     * add entries
+     * Add entries
      * @param amName
      * @param dest
+     * @param app
      * @throws Exception
      */
     private static void appendBC4J(String amName, String dest, String app) throws Exception {
         System.out.println("Start Conv: appendBC4J " + amName + " " + dest + " " + app);
-
+        ErrorAndLog.handleLog(app, "Start Conv: appendBC4J " + amName + " " + dest + " " + app);
         File bc4j =
             new File(dest + FileReaderWritter.getSeparator() + "common" + FileReaderWritter.getSeparator() +
                      "bc4j.xcfg");
@@ -104,8 +110,6 @@ public class BC4JGen {
         AppModuleConfigBag.appendChild(AppModuleConfig1);
 
 
-        /////////////
-
         Element AppModuleConfig2 = doc.createElement("AppModuleConfig");
         AppModuleConfig2.setAttribute("name", amName + "Shared");
         AppModuleConfig2.setAttribute("ApplicationName", destVal + "." + amName);
@@ -133,7 +137,7 @@ public class BC4JGen {
 
         FileReaderWritter.writeXMLFile(doc,
                                        dest + FileReaderWritter.getSeparator() + "common" +
-                                       FileReaderWritter.getSeparator() + "bc4j.xcfg");
+                                       FileReaderWritter.getSeparator() + "bc4j.xcfg", app);
 
         System.out.println("End Conv: appendBC4J ");
     }

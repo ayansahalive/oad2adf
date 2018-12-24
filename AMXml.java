@@ -1,12 +1,18 @@
 package conv;
 
-import java.io.*;
+import java.io.File;
 
-import java.util.*;
+import java.util.HashMap;
 
-import javax.xml.parsers.*;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
 
-import org.w3c.dom.*;
+import org.w3c.dom.Attr;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NamedNodeMap;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 
 public class AMXml {
@@ -15,7 +21,7 @@ public class AMXml {
     }
 
     /**
-     * generate am xml
+     * AM XML handle
      * @param path
      * @param app
      * @param dest
@@ -25,7 +31,7 @@ public class AMXml {
      */
     protected static void handleAMXml(String path, String app, String dest, String repo, String src) throws Exception {
         System.out.println("Start Conv: handleAMXml " + path + " " + app + " " + dest + " " + repo + " " + src);
-        ErrorAndLog.handleLog(app, "converting " + path);
+        ErrorAndLog.handleLog(app, "Start Conv: handleAMXml " + path + " " + app + " " + dest + " " + repo + " " + src);
         String name = path.substring(path.lastIndexOf(FileReaderWritter.getSeparator()) + 1);
         String amName = name.replace(".xml", "");
         String topApp = dest + FileReaderWritter.getSeparator() + app;
@@ -36,7 +42,7 @@ public class AMXml {
         String ImplClassPath = src + FileReaderWritter.getSeparator(); // for processing AMImpl and ClientInterface
         String DefClassPath = src + FileReaderWritter.getSeparator();
 
-        createAMXml(amName, destination, repo);
+        createAMXml(amName, destination, repo, app);
 
         File oafAm = new File(path); // OAF
         DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
@@ -67,7 +73,7 @@ public class AMXml {
                         String strAttr = currentAtt.getNodeName();
                         if (strAttr.equals("ViewObjectName")) {
                             String val = currentAtt.getNodeValue();
-                            val = DirCreator.changedModelClassPath(val);
+                            val = DirCreator.changedModelClassPath(val, app);
                             currentAtt.setNodeValue(val);
                         }
                     }
@@ -81,7 +87,7 @@ public class AMXml {
                         String strAttr = currentAtt.getName();
                         if (strAttr.equals("FullName")) {
                             String val = currentAtt.getValue();
-                            val = DirCreator.changedModelClassPath(val);
+                            val = DirCreator.changedModelClassPath(val, app);
                             currentAtt.setValue(val);
                         }
                     }
@@ -97,7 +103,7 @@ public class AMXml {
                         if (strAttr.equals("ViewLinkObjectName") || strAttr.equals("SrcViewUsageName") ||
                             strAttr.equals("DstViewUsageName")) {
                             String val = currentAtt.getValue();
-                            val = DirCreator.changedModelClassPath(val);
+                            val = DirCreator.changedModelClassPath(val, app);
                             currentAtt.setValue(val);
                         }
                         NodeList designList = newNode.getChildNodes();
@@ -123,19 +129,19 @@ public class AMXml {
                 String temp = currentAtt.getNodeValue();
                 temp = temp.replace(".", FileReaderWritter.getSeparator());
                 ImplClassPath += temp;
-                String val = DirCreator.changedModelClassPath(currentAtt.getNodeValue());
+                String val = DirCreator.changedModelClassPath(currentAtt.getNodeValue(), app);
                 AdfAppModule.setAttribute(currentAtt.getNodeName(), val);
             } else if (currentAtt.getNodeName().equals("DefClass")) {
                 String temp = currentAtt.getNodeValue();
                 temp = temp.replace(".", FileReaderWritter.getSeparator());
                 DefClassPath += temp;
-                String val = DirCreator.changedModelClassPath(currentAtt.getNodeValue());
+                String val = DirCreator.changedModelClassPath(currentAtt.getNodeValue(), app);
                 AdfAppModule.setAttribute(currentAtt.getNodeName(), val);
             }
         }
 
         // add entry to jpx
-        DirCreator.copyADFDTD(repo, pathModelsrc + FileReaderWritter.getSeparator() + "Model.jpx");
+        DirCreator.copyADFDTD(repo, pathModelsrc + FileReaderWritter.getSeparator() + "Model.jpx", app);
         File jpx = new File(pathModelsrc + FileReaderWritter.getSeparator() + "Model.jpx");
         DocumentBuilderFactory fact = DocumentBuilderFactory.newInstance();
         fact.setValidating(false);
@@ -146,7 +152,7 @@ public class AMXml {
 
         // find the occurance and increase the number
         String jpxContents =
-            FileReaderWritter.getCharContents(pathModelsrc + FileReaderWritter.getSeparator() + "Model.jpx");
+            FileReaderWritter.getCharContents(pathModelsrc + FileReaderWritter.getSeparator() + "Model.jpx", app);
         String findStr = "_appModuleNames";
         int lastIndex = 0;
         int count = 0;
@@ -175,12 +181,12 @@ public class AMXml {
 
         designProj.appendChild(newElement1);
 
-        JPXGen.checkContainee(impVal.substring(0, impVal.lastIndexOf(".") - 1), pathModelsrc);
+        JPXGen.checkContainee(impVal.substring(0, impVal.lastIndexOf(".") - 1), pathModelsrc, app);
 
         // update bundle
         String contents = impVal + amName + "_LABEL=" + amName;
         FileReaderWritter.appendFile(contents,
-                                     pathModelsrc + FileReaderWritter.getSeparator() + "ModelBundle.properties");
+                                     pathModelsrc + FileReaderWritter.getSeparator() + "ModelBundle.properties", app);
 
 
         // update ResId in am xml
@@ -214,9 +220,9 @@ public class AMXml {
             AMImpl.handleAMImpl(DefClassPath + ".java", app, dest, src);
 
         // write files
-        FileReaderWritter.writeXMLFile(jpxDoc, pathModelsrc + FileReaderWritter.getSeparator() + "Model.jpx");
+        FileReaderWritter.writeXMLFile(jpxDoc, pathModelsrc + FileReaderWritter.getSeparator() + "Model.jpx", app);
 
-        FileReaderWritter.writeXMLFile(adfDoc, destination);
+        FileReaderWritter.writeXMLFile(adfDoc, destination, app);
 
         // add bc4j entry
         BC4JGen.handleBC4J(destination, repo, app);
@@ -225,16 +231,16 @@ public class AMXml {
     }
 
     /**
-     *create initital file
+     * Temp xml
      * @param amName
      * @param dest
      * @param repo
-     * @param src
+     * @param app
      * @throws Exception
      */
-    private static void createAMXml(String amName, String dest, String repo) throws Exception {
-        System.out.println("Start Conv: createAMXml " + amName + " " + dest);
-
+    private static void createAMXml(String amName, String dest, String repo, String app) throws Exception {
+        System.out.println("Start Conv: createAMXml " + amName + " " + dest + " " + app);
+        ErrorAndLog.handleLog(app, "Start Conv: createAMXml " + amName + " " + dest + " " + app);
         String contents =
             "<?xml version=\"1.0\" encoding=\"UTF-8\" ?> " + "<!DOCTYPE AppModule SYSTEM \"jbo_03_01.dtd\"> " +
             "<AppModule" + "    xmlns=\"http://xmlns.oracle.com/bc4j\"" + "    Name=\"" + "" + amName + "\"" +
@@ -246,8 +252,8 @@ public class AMXml {
             " <Properties>" + "        <SchemaBasedProperties>" + " <LABEL/> </SchemaBasedProperties>" +
             "    </Properties> " + "</AppModule>";
 
-        DirCreator.copyADFDTD(repo, dest);
-        FileReaderWritter.writeFile(contents, dest);
+        DirCreator.copyADFDTD(repo, dest, app);
+        FileReaderWritter.writeFile(contents, dest, app);
         System.out.println("End Conv: createAMXml");
     }
 

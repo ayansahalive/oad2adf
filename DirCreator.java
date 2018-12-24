@@ -1,8 +1,14 @@
 package conv;
 
-import java.io.*;
+import java.io.BufferedOutputStream;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.StringReader;
 
-import java.util.zip.*;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 public class DirCreator {
     public DirCreator() {
@@ -12,14 +18,15 @@ public class DirCreator {
     private static final int BUFFER_SIZE = 4096;
 
     /**
-     * Generate Destination directories
+     * Create Dir
      * @param app
      * @param dest
      * @param repo
+     * @throws Exception
      */
     protected static void createDir(String app, String dest, String repo) throws Exception {
         System.out.println("Start Conv: createDir " + app + " " + dest + " " + repo);
-
+        ErrorAndLog.handleLog(app, "Start Conv: createDir " + app + " " + dest + " " + repo);
         String path = dest + FileReaderWritter.getSeparator() + app;
         File newFolder = new File(path);
         newFolder.mkdirs();
@@ -83,7 +90,7 @@ public class DirCreator {
     }
 
     /**
-     * copy project related files for jdeveloper
+     * Copy ADF Jdev files
      * @param dest
      * @param app
      * @param repo
@@ -91,7 +98,7 @@ public class DirCreator {
      */
     private static void copyProjectFiles(String dest, String app, String repo) throws Exception {
         System.out.println("Start Conv: copyProjectFiles " + dest + " " + app + " " + repo);
-
+        ErrorAndLog.handleLog(app, "Start Conv: copyProjectFiles " + dest + " " + app + " " + repo);
         String pathModel = dest + FileReaderWritter.getSeparator() + app + FileReaderWritter.getSeparator() + "Model";
         String pathVC =
             dest + FileReaderWritter.getSeparator() + app + FileReaderWritter.getSeparator() + "ViewController";
@@ -100,71 +107,83 @@ public class DirCreator {
         String Mjpr =
             FileReaderWritter.getCharContents(repo + FileReaderWritter.getSeparator() + "testApp" +
                                               FileReaderWritter.getSeparator() + "Model" +
-                                              FileReaderWritter.getSeparator() + "Model.jpr");
+                                              FileReaderWritter.getSeparator() + "Model.jpr", app);
         Mjpr = Mjpr.replace("testApp", app);
-        FileReaderWritter.writeFile(Mjpr, pathModel + FileReaderWritter.getSeparator() + "Model.jpr");
+        FileReaderWritter.writeFile(Mjpr, pathModel + FileReaderWritter.getSeparator() + "Model.jpr", app);
 
         String VCjpr =
             FileReaderWritter.getCharContents(repo + FileReaderWritter.getSeparator() + "testApp" +
                                               FileReaderWritter.getSeparator() + "ViewController" +
-                                              FileReaderWritter.getSeparator() + "ViewController.jpr");
+                                              FileReaderWritter.getSeparator() + "ViewController.jpr", app);
         VCjpr = VCjpr.replace("testApp", app);
-        FileReaderWritter.writeFile(VCjpr, pathVC + FileReaderWritter.getSeparator() + "ViewController.jpr");
+        FileReaderWritter.writeFile(VCjpr, pathVC + FileReaderWritter.getSeparator() + "ViewController.jpr", app);
 
         String jws =
             FileReaderWritter.getCharContents(repo + FileReaderWritter.getSeparator() + "testApp" +
-                                              FileReaderWritter.getSeparator() + "testApp.jws");
+                                              FileReaderWritter.getSeparator() + "testApp.jws", app);
         jws = jws.replace("testApp", app);
-        FileReaderWritter.writeFile(jws, pathJWS + FileReaderWritter.getSeparator() + app + ".jws");
+        FileReaderWritter.writeFile(jws, pathJWS + FileReaderWritter.getSeparator() + app + ".jws", app);
 
         String jpx =
             FileReaderWritter.getCharContents(repo + FileReaderWritter.getSeparator() + "testApp" +
                                               FileReaderWritter.getSeparator() + "Model" +
                                               FileReaderWritter.getSeparator() + "src" +
                                               FileReaderWritter.getSeparator() + "model" +
-                                              FileReaderWritter.getSeparator() + "Model.jpx");
+                                              FileReaderWritter.getSeparator() + "Model.jpx", app);
         FileReaderWritter.writeFile(jpx,
                                     pathModel + FileReaderWritter.getSeparator() + "src" +
                                     FileReaderWritter.getSeparator() + "model" + FileReaderWritter.getSeparator() +
-                                    "Model.jpx");
+                                    "Model.jpx", app);
         copyADFDTD(repo,
                    pathModel + FileReaderWritter.getSeparator() + "src" + FileReaderWritter.getSeparator() + "model" +
-                   FileReaderWritter.getSeparator());
+                   FileReaderWritter.getSeparator(), app);
 
         System.out.println("End Conv: copyProjectFiles");
     }
 
     /**
-     *  Copy DTD to OAF fioldes before parsing
+     * Temp DTD copy
      * @param repo
      * @param dest
+     * @param app
+     * @throws Exception
      */
-    protected static void copyOAFDTD(String repo, String dest) throws Exception {
+    protected static void copyOAFDTD(String repo, String dest, String app) throws Exception {
+        System.out.println("Start Conv: copyOAFDTD " + repo + " " + dest + " " + app);
+        ErrorAndLog.handleLog(app, "Start Conv: copyOAFDTD " + repo + " " + dest + " " + app);
         dest = dest.substring(0, dest.lastIndexOf(FileReaderWritter.getSeparator()));
-        System.out.println("Start Conv: copyOAFDTD " + repo + " " + dest);
         FileReaderWritter.copyFile(repo + FileReaderWritter.getSeparator() + "jbo_03_01_oaf.dtd",
-                                   dest + FileReaderWritter.getSeparator() + "jbo_03_01.dtd");
+                                   dest + FileReaderWritter.getSeparator() + "jbo_03_01.dtd", app);
         System.out.println("End Conv: copyOAFDTD");
     }
 
-    protected static void copyADFDTD(String repo, String dest) throws Exception {
+    /**
+     * Temp DTD Copy
+     * @param repo
+     * @param dest
+     * @param app
+     * @throws Exception
+     */
+    protected static void copyADFDTD(String repo, String dest, String app) throws Exception {
+        System.out.println("Start Conv: copyADFDTD " + repo + " " + dest + " " + app);
+        ErrorAndLog.handleLog(app, "Start Conv: copyADFDTD " + repo + " " + dest + " " + app);
         dest = dest.substring(0, dest.lastIndexOf(FileReaderWritter.getSeparator()));
-        System.out.println("Start Conv: copyADFDTD " + repo + " " + dest);
         new File(dest).mkdirs();
         FileReaderWritter.copyFile(repo + FileReaderWritter.getSeparator() + "jbo_03_01_adf.dtd",
-                                   dest + FileReaderWritter.getSeparator() + "jbo_03_01.dtd");
+                                   dest + FileReaderWritter.getSeparator() + "jbo_03_01.dtd", app);
         System.out.println("End Conv: copyADFDTD");
     }
 
     /**
-     *  Copy standard src files
+     * Source files copy
      * @param repo
      * @param app
      * @param pathSrc
+     * @throws Exception
      */
     private static void copySrcFiles(String repo, String app, String pathSrc) throws Exception {
         System.out.println("Start Conv: copySrcFiles " + repo + " " + app + " " + pathSrc);
-
+        ErrorAndLog.handleLog(app, "Start Conv: copySrcFiles " + repo + " " + app + " " + pathSrc);
         String jps =
             repo + FileReaderWritter.getSeparator() + "testApp" + FileReaderWritter.getSeparator() + "src" +
             FileReaderWritter.getSeparator() + "META-INF" + FileReaderWritter.getSeparator() + "jps-config.xml";
@@ -173,87 +192,90 @@ public class DirCreator {
             FileReaderWritter.getSeparator() + "META-INF" + FileReaderWritter.getSeparator() +
             "weblogic-application.xml";
 
-        jps = FileReaderWritter.getCharContents(jps);
+        jps = FileReaderWritter.getCharContents(jps, app);
         jps = jps.replace("testApp", app);
-        webapp = FileReaderWritter.getCharContents(webapp);
+        webapp = FileReaderWritter.getCharContents(webapp, app);
 
-        FileReaderWritter.writeFile(jps, pathSrc + FileReaderWritter.getSeparator() + "jps-config.xml");
-        FileReaderWritter.writeFile(webapp, pathSrc + FileReaderWritter.getSeparator() + "weblogic-application.xml");
+        FileReaderWritter.writeFile(jps, pathSrc + FileReaderWritter.getSeparator() + "jps-config.xml", app);
+        FileReaderWritter.writeFile(webapp, pathSrc + FileReaderWritter.getSeparator() + "weblogic-application.xml",
+                                    app);
         FileReaderWritter.copyFile(repo + FileReaderWritter.getSeparator() + "testApp" +
                                    FileReaderWritter.getSeparator() + "src" + FileReaderWritter.getSeparator() +
                                    "META-INF" + FileReaderWritter.getSeparator() + "cwallet.sso",
-                                   pathSrc + FileReaderWritter.getSeparator() + "cwallet.sso");
+                                   pathSrc + FileReaderWritter.getSeparator() + "cwallet.sso", app);
 
         System.out.println("End Conv: copySrcFiles");
     }
 
     /**
-     * Copy standard ViewController project files
+     * View COntroller Project file copy
      * @param pathVC
-     * @param src
+     * @param repo
      * @param app
+     * @throws Exception
      */
     private static void copyVCFiles(String pathVC, String repo, String app) throws Exception {
         System.out.println("Start Conv: copyVCFiles " + pathVC + " " + repo + " " + app);
-
+        ErrorAndLog.handleLog(app, "Start Conv: copyVCFiles " + pathVC + " " + repo + " " + app);
         FileReaderWritter.copyFile(repo + FileReaderWritter.getSeparator() + "testApp" +
                                    FileReaderWritter.getSeparator() + "ViewController" +
                                    FileReaderWritter.getSeparator() + "public_html" + FileReaderWritter.getSeparator() +
                                    "WEB-INF" + FileReaderWritter.getSeparator() + "faces-config.xml",
                                    pathVC + FileReaderWritter.getSeparator() + "public_html" +
                                    FileReaderWritter.getSeparator() + "WEB-INF" + FileReaderWritter.getSeparator() +
-                                   "faces-config.xml");
+                                   "faces-config.xml", app);
         FileReaderWritter.copyFile(repo + FileReaderWritter.getSeparator() + "testApp" +
                                    FileReaderWritter.getSeparator() + "ViewController" +
                                    FileReaderWritter.getSeparator() + "public_html" + FileReaderWritter.getSeparator() +
                                    "WEB-INF" + FileReaderWritter.getSeparator() + "trinidad-config.xml",
                                    pathVC + FileReaderWritter.getSeparator() + "public_html" +
                                    FileReaderWritter.getSeparator() + "WEB-INF" + FileReaderWritter.getSeparator() +
-                                   "trinidad-config.xml");
+                                   "trinidad-config.xml", app);
         FileReaderWritter.copyFile(repo + FileReaderWritter.getSeparator() + "testApp" +
                                    FileReaderWritter.getSeparator() + "ViewController" +
                                    FileReaderWritter.getSeparator() + "public_html" + FileReaderWritter.getSeparator() +
                                    "WEB-INF" + FileReaderWritter.getSeparator() + "web.xml",
                                    pathVC + FileReaderWritter.getSeparator() + "public_html" +
                                    FileReaderWritter.getSeparator() + "WEB-INF" + FileReaderWritter.getSeparator() +
-                                   "web.xml");
+                                   "web.xml", app);
         FileReaderWritter.copyFile(repo + FileReaderWritter.getSeparator() + "testApp" +
                                    FileReaderWritter.getSeparator() + "ViewController" +
                                    FileReaderWritter.getSeparator() + "src" + FileReaderWritter.getSeparator() +
                                    "META-INF" + FileReaderWritter.getSeparator() + "adf-settings.xml",
                                    pathVC + FileReaderWritter.getSeparator() + "src" +
                                    FileReaderWritter.getSeparator() + "META-INF" + FileReaderWritter.getSeparator() +
-                                   "adf-settings.xml");
+                                   "adf-settings.xml", app);
         FileReaderWritter.copyFile(repo + FileReaderWritter.getSeparator() + "testApp" +
                                    FileReaderWritter.getSeparator() + "ViewController" +
                                    FileReaderWritter.getSeparator() + "adfmsrc" + FileReaderWritter.getSeparator() +
                                    "META-INF" + FileReaderWritter.getSeparator() + "adfm.xml",
                                    pathVC + FileReaderWritter.getSeparator() + "adfmsrc" +
                                    FileReaderWritter.getSeparator() + "META-INF" + FileReaderWritter.getSeparator() +
-                                   "adfm.xml");
+                                   "adfm.xml", app);
         FileReaderWritter.copyFile(repo + FileReaderWritter.getSeparator() + "testApp" +
                                    FileReaderWritter.getSeparator() + "ViewController" +
                                    FileReaderWritter.getSeparator() + "public_html" + FileReaderWritter.getSeparator() +
                                    "WEB-INF" + FileReaderWritter.getSeparator() + "adfc-config.xml",
                                    pathVC + FileReaderWritter.getSeparator() + "public_html" +
                                    FileReaderWritter.getSeparator() + "WEB-INF" + FileReaderWritter.getSeparator() +
-                                   "adfc-config.xml");
+                                   "adfc-config.xml", app);
         FileReaderWritter.copyFile(repo + FileReaderWritter.getSeparator() + "testApp" +
                                    FileReaderWritter.getSeparator() + "ViewController" +
                                    FileReaderWritter.getSeparator() + "adfmsrc" + FileReaderWritter.getSeparator() +
                                    "view" + FileReaderWritter.getSeparator() + "DataBindings.cpx",
                                    pathVC + FileReaderWritter.getSeparator() + "adfmsrc" +
                                    FileReaderWritter.getSeparator() + "view" + FileReaderWritter.getSeparator() +
-                                   "DataBindings.cpx");
+                                   "DataBindings.cpx", app);
 
         System.out.println("End Conv: copyVCFiles");
     }
 
     /**
-     * Unizp app
+     * Unzip app
      * @param zipFilePath
      * @param destDirectory
      * @return
+     * @throws Exception
      */
     protected static String unzip(String zipFilePath, String destDirectory) throws Exception {
         System.out.println("Start Conv: unzip " + zipFilePath + " " + destDirectory);
@@ -284,10 +306,10 @@ public class DirCreator {
     }
 
     /**
-     * Loop through zipped folders
+     * Unzip and extract
      * @param zipIn
      * @param filePath
-     * @throws IOException
+     * @throws Exception
      */
     protected static void extractFile(ZipInputStream zipIn, String filePath) throws Exception {
         System.out.println("Start Conv: extractFile " + filePath);
@@ -302,12 +324,13 @@ public class DirCreator {
     }
 
     /**
-     * return the changed path from oaf to adf
+     * return changed class path to ADF
      * @param path
      * @return
      */
-    protected static String changedModelClassPath(String path) {
-        System.out.println("Start Conv: changedClassPath " + path);
+    protected static String changedModelClassPath(String path, String app) {
+        System.out.println("Start Conv: changedClassPath " + path + " " + app);
+        ErrorAndLog.handleLog(app, "Start Conv: changedClassPath " + path + " " + app);
         String retPath = "model." + path;
         System.out.println("End Conv: changedClassPath");
         return retPath;
@@ -318,8 +341,9 @@ public class DirCreator {
      * @param path
      * @return
      */
-    protected static String changedVLAOClassPath(String path) {
-        System.out.println("Start Conv: changedVLAOClassPath " + path);
+    protected static String changedVLAOClassPath(String path, String app) {
+        System.out.println("Start Conv: changedVLAOClassPath " + path + " +app");
+        ErrorAndLog.handleLog(app, "Start Conv: changedVLAOClassPath " + path + " " + app);
         String ret = "";
         String col = path.substring(0, path.lastIndexOf("."));
         String vo = col.substring(0, col.lastIndexOf("."));
@@ -335,9 +359,9 @@ public class DirCreator {
      * @param str
      * @return
      */
-    protected static String replaceImports(String str) {
-        System.out.println("Start Conv: replaceImports ");
-
+    protected static String replaceImports(String str, String app) {
+        System.out.println("Start Conv: replaceImports " + app);
+        ErrorAndLog.handleLog(app, "Start Conv: replaceImports " + app);
         str =
             str.replace("import oracle.apps.fnd.framework.server.OAApplicationModuleImpl;",
                         "import oracle.jbo.server.ApplicationModuleImpl;");
@@ -366,11 +390,8 @@ public class DirCreator {
                         "import oracle.jbo.server.EntityCache;");
         str = str.replace("OAEntityCache", "EntityCache");
 
-        //        str = str + "\n import oracle.jbo.JboException;";
-
         str = str.replace("import oracle.apps.fnd.framework.OAViewObject;", "import oracle.jbo.ViewObject;");
         str = str.replace("import oracle.apps.fnd.framework.OAFwkConstants;", "");
-        // str = str.replace("import oracle.apps.fnd.framework.OAException;", "");
         str = str.replace("import oracle.apps.fnd.common.MessageToken;", "");
         str = str.replace("com.sun.java.util.collections", "java.util");
         str =
@@ -381,11 +402,10 @@ public class DirCreator {
         try {
             String pkg = str.substring(str.indexOf("package"), str.indexOf(";")).trim();
             pkg = pkg.replace("package ", "");
-            str = str.replace(pkg, changedModelClassPath(pkg));
+            str = str.replace(pkg, changedModelClassPath(pkg, app));
 
             // replace pattern of imported classes of the same project
             String all = pkg.substring(0, pkg.indexOf(".oracle.apps."));
-            System.out.println(all);
             str = str.replace("import " + all, "import model." + all);
         } catch (StringIndexOutOfBoundsException e) {
             // System.out.println("********* No immports to replace **********");
@@ -401,7 +421,9 @@ public class DirCreator {
      * @param className
      * @return
      */
-    protected static String addMethods(String className) {
+    protected static String addMethods(String className, String app) {
+        System.out.println("Start Conv: addMethods " + className + " " + app);
+        ErrorAndLog.handleLog(app, "Start Conv: addMethods " + className + " " + app);
         String str =
             "    private boolean isLoggingEnabled(" + className + ".OAFwkConstants oaFwkConstants) {\n" +
             "        return false;\n" + "    }\n" + "\n" + "    private void writeDiagnostics(" + className +
@@ -420,23 +442,18 @@ public class DirCreator {
      * @param path
      * @throws Exception
      */
-    protected static void replacements(String path) throws Exception {
-        String imports = "import oracle.jbo.JboException; \n";
-        String str = FileReaderWritter.getCharContents(path);
-
-        //        String temp = str.substring(str.indexOf("package"), str.indexOf("{"));
-        //        String top = temp.substring(0, temp.lastIndexOf(";") + 1);
-        //        String middle = temp.substring(temp.lastIndexOf(";"));
-        //        String bottom = str.substring(str.indexOf("{"));
-        //        top = top + imports;
-        //        str = top + middle + bottom;
-
+    protected static void replacements(String path, String app) throws Exception {
+        System.out.println("Start Conv: replacements " + path + " " + app);
+        ErrorAndLog.handleLog(app, "Start Conv: replacements " + path + " " + app);
+        String str = FileReaderWritter.getCharContents(path, app);
         /// replacements =====================================================
         str = str.replace("OAException", "JboException");
         str = str.replace("OADBTransaction", "DBTransaction");
         str = str.replace("getOADBTransaction", "getDBTransaction");
         str = str.replace("OAViewObject", "ViewObject");
         str = str.replace("OARow", "Row");
+        str = str.replace("OAViewRowImpl", "ViewRowImpl");
+
         //// =================
         BufferedReader reader;
         String ret = "";
@@ -447,20 +464,20 @@ public class DirCreator {
             line = reader.readLine();
             if (line != null && line.contains("OracleConnection")) {
                 line = "//" + line;
-                System.out.println(line.lastIndexOf(");"));
                 if (line.lastIndexOf(");") == -1) {
                     ret = ret + line + "\n";
                     line = reader.readLine();
                     line = "//" + line;
                 }
-            } else if(line != null && line.contains(".prepareStatement")) {
-                //String tempStr = line.substring(0, line.indexOf("="));
-                line = line.replace(line.substring(line.indexOf("=") +1, line.indexOf(".prepareStatement")+8), "getDBTransaction().createPrepared");
-                line = line.replace(line.substring(line.lastIndexOf(");"), line.lastIndexOf(");")+2), ",0);");
+            } else if (line != null && line.contains(".prepareStatement")) {
+                line =
+                    line.replace(line.substring(line.indexOf("=") + 1, line.indexOf(".prepareStatement") + 8),
+                                 "getDBTransaction().createPrepared");
+                line = line.replace(line.substring(line.lastIndexOf(");"), line.lastIndexOf(");") + 2), ",0);");
             }
         }
         str = ret;
-        FileReaderWritter.writeFile(str, path);
+        FileReaderWritter.writeFile(str, path, app);
     }
 
     /**
@@ -468,8 +485,11 @@ public class DirCreator {
      * @param path
      * @throws Exception
      */
-    protected static void WebBeanReplacements(String path) throws Exception {
-        String str = FileReaderWritter.getCharContents(path);
+    protected static void WebBeanReplacements(String path, String app) throws Exception {
+        System.out.println("Start Conv: WebBeanReplacements " + path + " " + app);
+        ErrorAndLog.handleLog(app, "Start Conv: WebBeanReplacements " + path + " " + app);
+
+        String str = FileReaderWritter.getCharContents(path, app);
 
         // replace import not written yet
 
@@ -648,6 +668,6 @@ public class DirCreator {
         //        str.replace("OAUrlIncludeBean","");
         //        str.replace("OAWebBean","");
         str = str.replace("OAException", "JboException");
-        FileReaderWritter.writeFile(str, path);
+        FileReaderWritter.writeFile(str, path, app);
     }
 }

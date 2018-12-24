@@ -1,10 +1,16 @@
 package conv;
 
-import java.io.*;
+import java.io.File;
 
-import javax.xml.parsers.*;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
 
-import org.w3c.dom.*;
+import org.w3c.dom.Attr;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NamedNodeMap;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 
 public class AOXml {
@@ -13,24 +19,24 @@ public class AOXml {
     }
 
     /**
-     * convert association object
+     * AO handle
      * @param path
      * @param app
      * @param dest
      * @param repo
+     * @param src
      * @throws Exception
      */
     protected static void handleAOXml(String path, String app, String dest, String repo, String src) throws Exception {
-        System.out.println("Start Conv: handleAOXml " + path + " " + app + " " + dest + " " + repo);
-        ErrorAndLog.handleLog(app, "converting " + path);
-        String name = path.substring(path.lastIndexOf(FileReaderWritter.getSeparator()) + 1);
+        System.out.println("Start Conv: handleAOXml " + path + " " + app + " " + dest + " " + repo + " " + src);
+        ErrorAndLog.handleLog(app, "Start Conv: handleAOXml " + path + " " + app + " " + dest + " " + repo + " " + src);
         String topApp = dest + FileReaderWritter.getSeparator() + app;
         String pathModel = topApp + FileReaderWritter.getSeparator() + "Model";
         String pathModelsrc =
             pathModel + FileReaderWritter.getSeparator() + "src" + FileReaderWritter.getSeparator() + "model";
         String destination = FileReaderWritter.getModelDestinationPath(path, app, dest, src);
 
-        createAOXml(destination, repo);
+        createAOXml(destination, repo, app);
 
         File oafAO = new File(path); // OAF
         DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
@@ -74,7 +80,7 @@ public class AOXml {
         impVal = impVal.substring(0, impVal.lastIndexOf(FileReaderWritter.getSeparator()));
         impVal = impVal.replace(FileReaderWritter.getSeparator(), ".");
         impVal = "model." + impVal;
-        JPXGen.checkContainee(impVal, pathModelsrc);
+        JPXGen.checkContainee(impVal, pathModelsrc, app);
 
         // update pacakges
         NodeList AssociationEndList = AssociationAdf.getChildNodes();
@@ -86,7 +92,7 @@ public class AOXml {
                 for (int k = 0; k < AssociationEndAttrs.getLength(); k++) {
                     Attr attr = (Attr) AssociationEndAttrs.item(k);
                     if (attr.getNodeName().equals("Owner")) {
-                        String val = DirCreator.changedModelClassPath(attr.getNodeValue());
+                        String val = DirCreator.changedModelClassPath(attr.getNodeValue(), app);
                         attr.setNodeValue(val);
                     } else if (attr.getNodeName().equals("LockContainer")) {
                         Element x = (Element) AssociationEnd;
@@ -111,7 +117,8 @@ public class AOXml {
                                     Attr valNode = (Attr) itemAttrs.item(z);
                                     if (valNode.getNodeName().equals("Value")) {
                                         String val =
-                                            DirCreator.changedModelClassPath(valNode.getNodeValue()); //changedVLAOClassPath
+                                            DirCreator.changedModelClassPath(valNode.getNodeValue(),
+                                                                             app); //changedVLAOClassPath
                                         valNode.setNodeValue(val);
                                     }
                                 }
@@ -132,7 +139,8 @@ public class AOXml {
                                         nameAttr.getNodeValue().equals("_foreignKey")) {
                                         Node nameAttrNew = attrList.item(z + 1);
                                         if (null != nameAttrNew) {
-                                            String val = DirCreator.changedModelClassPath(nameAttrNew.getNodeValue());
+                                            String val =
+                                                DirCreator.changedModelClassPath(nameAttrNew.getNodeValue(), app);
                                             nameAttrNew.setNodeValue(val);
                                         }
                                     }
@@ -145,28 +153,29 @@ public class AOXml {
         }
 
         // write files
-        FileReaderWritter.writeXMLFile(adfDoc, destination);
+        FileReaderWritter.writeXMLFile(adfDoc, destination, app);
 
         System.out.println("End Conv: handleAOXml ");
     }
 
-
     /**
-     * create empty xml
+     * Temp XML
      * @param dest
      * @param repo
+     * @param app
      * @throws Exception
      */
-    private static void createAOXml(String dest, String repo) throws Exception {
-        System.out.println("Start Conv: createAOXml " + dest + " " + repo);
+    private static void createAOXml(String dest, String repo, String app) throws Exception {
+        System.out.println("Start Conv: createAOXml " + dest + " " + repo + " " + app);
+        ErrorAndLog.handleLog(app, "Start Conv: createAOXml " + dest + " " + repo + " " + app);
         String contents =
             "<?xml version=\"1.0\" encoding=\"UTF-8\" ?> " + "<!DOCTYPE Association SYSTEM \"jbo_03_01.dtd\"> " +
             "<Association " + "  xmlns=\"http://xmlns.oracle.com/bc4j\" " + "  Version=\"12.1.3.10.47\" " +
             "  InheritPersonalization=\"merge\"> " + "  <DesignTime> " +
             "    <Attr Name=\"_isCodegen\" Value=\"true\"/> " + "  </DesignTime>  </Association>";
 
-        DirCreator.copyADFDTD(repo, dest);
-        FileReaderWritter.writeFile(contents, dest);
+        DirCreator.copyADFDTD(repo, dest, app);
+        FileReaderWritter.writeFile(contents, dest, app);
         System.out.println("End Conv: createAOXml ");
     }
 

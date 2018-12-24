@@ -1,12 +1,25 @@
 package conv;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.InputStream;
+import java.io.OutputStream;
 
-import javax.xml.transform.*;
-import javax.xml.transform.dom.*;
-import javax.xml.transform.stream.*;
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Result;
+import javax.xml.transform.Source;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 
-import org.w3c.dom.*;
+import org.w3c.dom.Document;
+import org.w3c.dom.DocumentType;
 
 
 public class FileReaderWritter {
@@ -19,8 +32,9 @@ public class FileReaderWritter {
      * @param contents
      * @param path
      */
-    protected static void writeFile(String contents, String path) throws Exception {
-        System.out.println("Start Conv: writeFile " + path);
+    protected static void writeFile(String contents, String path, String app) throws Exception {
+        //        System.out.println("Start Conv: writeFile " + path + " " + app);
+        //        ErrorAndLog.handleLog(app, "Start Conv: writeFile " + path + " " + app);
         if (null != contents && !"".equals(contents) && !"null".equals(contents)) {
             String dest = path.substring(0, path.lastIndexOf(getSeparator()));
             new File(dest).mkdirs();
@@ -30,8 +44,7 @@ public class FileReaderWritter {
             outputStream.write(strToBytes);
             outputStream.close();
         }
-        System.out.println("End Conv: writeFile");
-
+        //        System.out.println("End Conv: writeFile");
     }
 
     /**
@@ -39,9 +52,9 @@ public class FileReaderWritter {
      * @param src
      * @param dest
      */
-    protected static void copyFile(String src, String dest) throws Exception {
+    protected static void copyFile(String src, String dest, String app) throws Exception {
         System.out.println("Start Conv: copyFile " + src + " " + dest);
-
+        ErrorAndLog.handleLog(app, "Start Conv: copyFile " + src + " " + dest);
         String Dest = dest.substring(0, dest.lastIndexOf(getSeparator()));
         new File(Dest).mkdirs();
 
@@ -67,7 +80,9 @@ public class FileReaderWritter {
      * @param path
      * @return
      */
-    protected static String getCharContents(String path) throws Exception {
+    protected static String getCharContents(String path, String app) throws Exception {
+        System.out.println("Start Conv: getCharContents " + path + " " + app);
+        ErrorAndLog.handleLog(app, "Start Conv: getCharContents " + path + " " + app);
         BufferedReader reader;
         String ret = "";
 
@@ -78,6 +93,7 @@ public class FileReaderWritter {
             line = reader.readLine();
         }
         reader.close();
+        System.out.println("End Conv: getCharContents ");
         return ret;
     }
 
@@ -86,12 +102,12 @@ public class FileReaderWritter {
      * @param doc
      * @param Dest
      */
-    protected static void writeXMLFile(Document doc, String Dest) throws Exception {
-        System.out.println("Start Conv: writeXMLFile " + Dest);
+    protected static void writeXMLFile(Document doc, String Dest, String app) throws Exception {
+        System.out.println("Start Conv: writeXMLFile " + Dest + " " + app);
+        ErrorAndLog.handleLog(app, "Start Conv: writeXMLFile " + Dest + " " + app);
 
         String dest = Dest.substring(0, Dest.lastIndexOf(getSeparator()));
         new File(dest).mkdirs();
-        //doc.setXmlStandalone(true);
         Transformer transformer = TransformerFactory.newInstance().newTransformer();
         transformer.setOutputProperty(OutputKeys.INDENT, "yes");
         transformer.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
@@ -112,19 +128,19 @@ public class FileReaderWritter {
      * @param filePath
      * @throws Exception
      */
-    protected static void appendFile(String contents, String path) throws Exception {
-        System.out.println("Start Conv: appendModelBundle " + contents + " " + path);
-
+    protected static void appendFile(String contents, String path, String app) throws Exception {
+        //        System.out.println("Start Conv: appendFile " + path + " " + app);
+        //        ErrorAndLog.handleLog(app, "Start Conv: appendFile " + path + " " + app);
         FileWriter fw = null;
         fw = new FileWriter(path, true);
         if (null == fw)
-            writeFile(contents, path);
+            writeFile(contents, path, app);
         BufferedWriter bw = new BufferedWriter(fw);
         bw.write("\n" + contents);
         bw.newLine();
         bw.close();
         fw.close();
-        System.out.println("End Conv: appendModelBundle ");
+        //        System.out.println("End Conv: appendFile ");
     }
 
     /**
@@ -132,8 +148,9 @@ public class FileReaderWritter {
      * @param param
      * @return
      */
-    public static String toInitCap(String param) {
-        System.out.println("Start Conv: toInitCap " + param);
+    public static String toInitCap(String param, String app) {
+        System.out.println("Start Conv: toInitCap " + param + " " + app);
+        ErrorAndLog.handleLog(app, "Start Conv: toInitCap " + param + " " + app);
         if (param != null && param.length() > 0) {
             param = param.toLowerCase();
             char[] array = param.toCharArray();
@@ -167,16 +184,16 @@ public class FileReaderWritter {
      */
     protected static void unalteredFile(String path, String app, String dest, String src) throws Exception {
         System.out.println("Start Conv: unalteredFile " + path + " " + app + " " + dest + " " + src);
-        ErrorAndLog.handleLog(app, "copying " + path);
+        ErrorAndLog.handleLog(app, "Start Conv: unalteredFile " + path + " " + app + " " + dest + " " + src);
         String Dest = getModelDestinationPath(path, app, dest, src);
         if (path.contains(".java")) {
-            String contents = FileReaderWritter.getCharContents(path);
+            String contents = FileReaderWritter.getCharContents(path, app);
             String temp = contents.substring(0, contents.indexOf("{"));
-            String changed = DirCreator.replaceImports(temp);
+            String changed = DirCreator.replaceImports(temp, app);
             contents = changed + contents.substring(contents.indexOf("{"));
-            FileReaderWritter.writeFile(contents, path);
+            FileReaderWritter.writeFile(contents, path, app);
         } else
-            copyFile(path, Dest);
+            copyFile(path, Dest, app);
 
         System.out.println("End Conv: unalteredFile ");
     }
@@ -192,6 +209,7 @@ public class FileReaderWritter {
      */
     protected static String getModelDestinationPath(String path, String app, String dest, String src) throws Exception {
         System.out.println("Start Conv: getModelDestinationPath " + path + " " + app + " " + dest + " " + src);
+        ErrorAndLog.handleLog(app, "Start Conv: getModelDestinationPath " + path + " " + app + " " + dest + " " + src);
         String newPath = path;
         newPath = newPath.replace(src + getSeparator(), "");
         String Dest =
@@ -203,44 +221,45 @@ public class FileReaderWritter {
         System.out.println("End Conv: getModelDestinationPath");
         return Dest;
     }
-    
+
     protected static String getViewDestinationPath(String path, String app, String dest, String src) throws Exception {
         System.out.println("Start Conv: getViewDestinationPath " + path + " " + app + " " + dest + " " + src);
+        ErrorAndLog.handleLog(app, "Start Conv: getViewDestinationPath " + path + " " + app + " " + dest + " " + src);
         String newPath = path;
         newPath = newPath.replace(src + getSeparator(), "");
         String Dest =
-            dest + getSeparator() + app + getSeparator() + "ViewController" + getSeparator() + "public_html" + getSeparator() + "view" +
-            getSeparator() + newPath;
+            dest + getSeparator() + app + getSeparator() + "ViewController" + getSeparator() + "public_html" +
+            getSeparator() + "view" + getSeparator() + newPath;
 
         String x = Dest.substring(0, Dest.lastIndexOf(getSeparator()));
         new File(x).mkdirs();
         System.out.println("End Conv: getViewDestinationPath");
         return Dest;
     }
-    
+
     protected static String getBeanDestinationPath(String path, String app, String dest, String src) throws Exception {
         System.out.println("Start Conv: getBeanDestinationPath " + path + " " + app + " " + dest + " " + src);
+        ErrorAndLog.handleLog(app, "Start Conv: getBeanDestinationPath " + path + " " + app + " " + dest + " " + src);
         String newPath = path;
         newPath = newPath.replace(src + getSeparator(), "");
         String Dest =
-            dest + getSeparator() + app + getSeparator() + "ViewController" + getSeparator() + "src" + getSeparator() + "view" +
-            getSeparator() + newPath;
+            dest + getSeparator() + app + getSeparator() + "ViewController" + getSeparator() + "src" + getSeparator() +
+            "view" + getSeparator() + newPath;
 
         String x = Dest.substring(0, Dest.lastIndexOf(getSeparator()));
         new File(x).mkdirs();
         System.out.println("End Conv: getBeanDestinationPath");
         return Dest;
     }
-    
-    protected static String getViewPageDefDestinationPath(String path, String app, String dest) throws Exception {
-        //System.out.println("Start Conv: getViewDestinationPath " + path + " " + app + " " + dest + " " + src);
-        String newPath = path;
-        //newPath = newPath.replace(src + getSeparator(), "");
-        String Dest =
-            dest + getSeparator() + app + getSeparator() + "ViewController" + getSeparator() + "adfmsrc" + getSeparator() + "view" +
-            getSeparator() + newPath;
 
-        //String x = Dest.substring(0, Dest.lastIndexOf(getSeparator()));
+    protected static String getViewPageDefDestinationPath(String path, String app, String dest) throws Exception {
+        System.out.println("Start Conv: getViewDestinationPath " + path + " " + app + " " + dest);
+        ErrorAndLog.handleLog(app, "Start Conv: getViewDestinationPath " + path + " " + app + " " + dest);
+        String newPath = path;
+        String Dest =
+            dest + getSeparator() + app + getSeparator() + "ViewController" + getSeparator() + "adfmsrc" +
+            getSeparator() + "view" + getSeparator() + newPath;
+
         new File(Dest).mkdirs();
         System.out.println("End Conv: getViewDestinationPath");
         return Dest;

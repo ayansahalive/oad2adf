@@ -1,13 +1,16 @@
 package conv;
 
-import java.io.*;
+import java.io.File;
+import java.io.PrintStream;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.xml.parsers.*;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
 
-import org.w3c.dom.*;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 
 public class Main {
     public Main(String app) {
@@ -63,7 +66,7 @@ public class Main {
      * @param args
      */
     public static void main(String[] args) {
-        String app = "hello"; // change here
+        String app = "billetissue"; // change here
         String ret = startConverter(app);
         System.out.println(ret);
     }
@@ -73,7 +76,7 @@ public class Main {
      */
     public static String startConverter(String app) {
         System.out.println("Start Conv: startConverter " + app);
-
+        ErrorAndLog.handleLog(app, "Start Conv: startConverter " + app);
         Main obj = new Main(app);
         String src = obj.getSrc();
         String dest = obj.getDest();
@@ -104,10 +107,19 @@ public class Main {
                 }
                 returnVal = "Success.";
                 ErrorAndLog.handleLog(app, "Completed Conversion. ");
+                ErrorAndLog.handleErrors(app, "No Errors.");
+                ErrorAndLog.handleErrors(app, "Please open the .jws from Jdeveloper 12.1.3 and compile the projects.");
             } catch (Exception e) {
-                e.printStackTrace();
-                ErrorAndLog.handleErrors(app, e.toString());
-                ErrorAndLog.handleLog(app, "Conversion Error. Please check " + app + "Errors.txt for details.");
+                try {
+                    String destination =
+                        System.getenv("ADF_DESTINATION") + FileReaderWritter.getSeparator() + app + "Errors.txt";
+                    File f = new File(destination);
+                    PrintStream ps = new PrintStream(f);
+                    e.printStackTrace(ps);
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                    ErrorAndLog.handleErrors(app, "Error while printing exceptions.");
+                }
             }
         }
         return returnVal;
@@ -119,6 +131,7 @@ public class Main {
      */
     private static void removeFolder(String app, String type) throws Exception {
         System.out.println("Start Conv: removeExtracted " + app + " " + type);
+        ErrorAndLog.handleLog(app, "Start Conv: removeExtracted " + app + " " + type);
         // handle OS here
         Runtime run = Runtime.getRuntime();
         Process zipDel = null;
@@ -126,10 +139,8 @@ public class Main {
         String cmd =
             dir + FileReaderWritter.getSeparator() + "src" + FileReaderWritter.getSeparator() + "conv" +
             FileReaderWritter.getSeparator() + "removeExtracted.bat " + app + " " + type;
-        System.out.println(cmd);
         zipDel = run.exec(cmd);
         zipDel.waitFor();
-        System.out.println(zipDel.exitValue());
         zipDel.destroy();
         System.out.println("End Conv: removeExtracted ");
     }
@@ -140,7 +151,8 @@ public class Main {
      * @param level
      */
     private void readDir(String path, int level) throws Exception {
-        System.out.println("Start Conv: readDir " + path + " " + level + " " + this.getSrc());
+        //        System.out.println("Start Conv: readDir " + path + " " + level + " " + this.getSrc());
+        //        ErrorAndLog.handleLog(app, "Start Conv: readDir " + path + " " + level + " " + this.getSrc());
         File dir = new File(path);
         File[] firstLevelFiles = dir.listFiles();
         if (firstLevelFiles != null && firstLevelFiles.length > 0) {
@@ -156,7 +168,7 @@ public class Main {
                 }
             }
         }
-        System.out.println("End Conv: readDir");
+        //        System.out.println("End Conv: readDir");
     }
 
     /**
@@ -165,7 +177,8 @@ public class Main {
      */
     private void xmlEditor(String path) throws Exception {
         System.out.println("Start Conv: xmlEditor " + path);
-        DirCreator.copyOAFDTD(this.getRepo(), path);
+        ErrorAndLog.handleLog(app, "Start Conv: xmlEditor " + path);
+        DirCreator.copyOAFDTD(this.getRepo(), path, app);
         File inputFile = new File(path);
         DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
         dbFactory.setValidating(false);
@@ -185,8 +198,6 @@ public class Main {
                 FileReaderWritter.getSeparator() + "src" + FileReaderWritter.getSeparator() + "model" +
                 FileReaderWritter.getSeparator() + newPath;
 
-            System.out.println(Dest);
-            //System.out.println(this.getDest()+"\\"+"Model\\"+);
             filePaths.put(root.getAttribute("Name"), Dest);
         } else if (type.equals("Entity"))
             EOXml.handleEOXml(path, this.getApp(), this.getDest(), this.getRepo(), this.getSrc());

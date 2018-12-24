@@ -1,6 +1,6 @@
 package conv;
 
-import java.io.*;
+import java.io.File;
 
 
 public class ErrorAndLog {
@@ -18,10 +18,10 @@ public class ErrorAndLog {
             String dest = System.getenv("ADF_DESTINATION") + FileReaderWritter.getSeparator() + app + "Errors.txt";
             File f = new File(dest);
             if (!f.exists()) {
-                FileReaderWritter.writeFile("Errors for OAF to ADF Conversion of " + app + "\n", dest);
-                FileReaderWritter.appendFile(contents, dest);
+                FileReaderWritter.writeFile("Errors for OAF to ADF Conversion of " + app + "\n", dest, app);
+                FileReaderWritter.appendFile(contents, dest, app);
             } else
-                FileReaderWritter.appendFile(contents, dest);
+                FileReaderWritter.appendFile(contents, dest, app);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -37,10 +37,10 @@ public class ErrorAndLog {
             String dest = System.getenv("ADF_DESTINATION") + FileReaderWritter.getSeparator() + app + "Log.txt";
             File f = new File(dest);
             if (!f.exists()) {
-                FileReaderWritter.writeFile("Starting OAF to ADF Conversion of " + app + "\n", dest);
-                FileReaderWritter.appendFile(contents, dest);
+                FileReaderWritter.writeFile("Starting OAF to ADF Conversion of " + app + "\n", dest, app);
+                FileReaderWritter.appendFile(contents, dest, app);
             } else
-                FileReaderWritter.appendFile(contents, dest);
+                FileReaderWritter.appendFile(contents, dest, app);
         } catch (Exception e) {
             e.printStackTrace();
         }

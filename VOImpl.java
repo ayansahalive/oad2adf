@@ -1,6 +1,7 @@
 package conv;
 
-import java.util.*;
+import java.util.List;
+import java.util.Vector;
 
 
 public class VOImpl {
@@ -19,7 +20,7 @@ public class VOImpl {
         System.out.println("Start Conv: handleVOImpl " + path + " " + app + " " + dest);
         ErrorAndLog.handleLog(app, "converting " + path);
         String str = "";
-        str = FileReaderWritter.getCharContents(path);
+        str = FileReaderWritter.getCharContents(path, app);
         // handle multiline comments
         int start = -1;
         int end = -1;
@@ -31,7 +32,7 @@ public class VOImpl {
 
         // change references
         String tempStr = str.substring(0, str.indexOf("{"));
-        String changed = DirCreator.replaceImports(tempStr);
+        String changed = DirCreator.replaceImports(tempStr, app);
         str = changed + str.substring(str.indexOf("{"));
 
         if (null != str && !"".equals(str) && !"null".equals(str)) {
@@ -57,7 +58,7 @@ public class VOImpl {
             // handle logging
             String name = path.substring(path.lastIndexOf(FileReaderWritter.getSeparator()) + 1);
             String className = name.replace(".java", "");
-            String newMethods = DirCreator.addMethods(className);
+            String newMethods = DirCreator.addMethods(className, app);
             str = str.subSequence(0, str.lastIndexOf("}")).toString();
             str = str + newMethods + "}";
 
@@ -65,9 +66,9 @@ public class VOImpl {
             // write a new file
             String destination = FileReaderWritter.getModelDestinationPath(path, app, dest, src);
 
-            FileReaderWritter.writeFile(str, destination);
-            
-            DirCreator.replacements(destination);
+            FileReaderWritter.writeFile(str, destination, app);
+
+            DirCreator.replacements(destination, app);
         }
 
         System.out.println("End Conv: handleVOImpl ");
@@ -81,11 +82,10 @@ public class VOImpl {
      * @throws Exception
      */
     protected static void handleVORowImpl(String path, String app, String dest, String src) throws Exception {
-        System.out.println("Start Conv: handleVORowImpl " + path + " " + app + " " + dest);
-        ErrorAndLog.handleLog(app, "converting " + path);
-        //        String name = path.substring(path.lastIndexOf(FileReaderWritter.getSeparator()) + 1);
+        System.out.println("Start Conv: handleVORowImpl " + path + " " + app + " " + dest + " " + src);
+        ErrorAndLog.handleLog(app, "Start Conv: handleVORowImpl " + path + " " + app + " " + dest + " " + src);
         JavaCodeExtractor obj = new JavaCodeExtractor();
-        List<String> vec = obj.start(path);
+        List<String> vec = obj.start(path, app);
         String str = "";
 
         Vector attrVec = new Vector();
@@ -96,14 +96,14 @@ public class VOImpl {
             String contents = vec.get(i) + "";
             if (i == 0) {
                 // change references
-                String changed = DirCreator.replaceImports(contents);
+                String changed = DirCreator.replaceImports(contents, app);
                 contents = changed + contents.substring(contents.indexOf("{") + 1);
             } else if (contents.contains("setAttrInvokeAccessor") || contents.contains("getAttrInvokeAccessor")) {
                 continue;
             } else if (contents.contains("public static final int")) {
                 String attr =
                     contents.subSequence(contents.indexOf("int") + 3, contents.indexOf("=")).toString().trim();
-                attr = FileReaderWritter.toInitCap(attr);
+                attr = FileReaderWritter.toInitCap(attr, app);
                 String temp =
                     (contents.substring(0, contents.indexOf("=")) + " = AttributesEnum." + attr + ".index();").trim();
                 vec.set(i, temp);
@@ -112,7 +112,7 @@ public class VOImpl {
             str = str + contents + "\n";
         }
 
-        String accessor = generateEnumeration(attrVec);
+        String accessor = generateEnumeration(attrVec, app);
         str = str.substring(0, str.lastIndexOf("}")) + accessor + "}";
 
         //        str = str.replace(" Number", "oracle.jbo.domain.Number");
@@ -120,16 +120,16 @@ public class VOImpl {
         // handle logging
         String name = path.substring(path.lastIndexOf(FileReaderWritter.getSeparator()) + 1);
         String className = name.replace(".java", "");
-        String newMethods = DirCreator.addMethods(className);
+        String newMethods = DirCreator.addMethods(className, app);
         str = str.subSequence(0, str.lastIndexOf("}")).toString();
         str = str + newMethods + "}";
 
         // write a new file
         String destination = FileReaderWritter.getModelDestinationPath(path, app, dest, src);
 
-        FileReaderWritter.writeFile(str, destination);
-        
-        DirCreator.replacements(destination);
+        FileReaderWritter.writeFile(str, destination, app);
+
+        DirCreator.replacements(destination, app);
 
         System.out.println("End Conv: handleVORowImpl ");
     }
@@ -142,11 +142,11 @@ public class VOImpl {
      * @throws Exception
      */
     protected static void handleVODef(String path, String app, String dest, String src) throws Exception {
-        System.out.println("Start Conv: handleVODef " + path + " " + app + " " + dest);
-        ErrorAndLog.handleLog(app, "converting " + path);
+        System.out.println("Start Conv: handleVODef " + path + " " + app + " " + dest + " " + src);
+        ErrorAndLog.handleLog(app, "Start Conv: handleVODef " + path + " " + app + " " + dest + " " + src);
         String str = "";
 
-        str = FileReaderWritter.getCharContents(path);
+        str = FileReaderWritter.getCharContents(path, app);
         // handle multiline comments
         int start = -1;
         int end = -1;
@@ -157,22 +157,22 @@ public class VOImpl {
         }
 
         String tempStr = str.substring(0, str.indexOf("{"));
-        String changed = DirCreator.replaceImports(tempStr);
+        String changed = DirCreator.replaceImports(tempStr, app);
         str = changed + str.substring(str.indexOf("{"));
 
         // handle logging
         String name = path.substring(path.lastIndexOf(FileReaderWritter.getSeparator()) + 1);
         String className = name.replace(".java", "");
-        String newMethods = DirCreator.addMethods(className);
+        String newMethods = DirCreator.addMethods(className, app);
         str = str.subSequence(0, str.lastIndexOf("}")).toString();
         str = str + newMethods + "}";
 
         // write a new file
         String destination = FileReaderWritter.getModelDestinationPath(path, app, dest, src);
 
-        FileReaderWritter.writeFile(str, destination);
-        
-        DirCreator.replacements(destination);
+        FileReaderWritter.writeFile(str, destination, app);
+
+        DirCreator.replacements(destination, app);
 
         System.out.println("End Conv: handleVODef ");
     }
@@ -186,10 +186,10 @@ public class VOImpl {
      * @throws Exception
      */
     protected static void handleVOClient(String path, String app, String dest, String src) throws Exception {
-        System.out.println("Start Conv: handleVODef " + path + " " + app + " " + dest);
-        ErrorAndLog.handleLog(app, "converting " + path);
+        System.out.println("Start Conv: handleVODef " + path + " " + app + " " + dest + " " + src);
+        ErrorAndLog.handleLog(app, "Start Conv: handleVODef " + path + " " + app + " " + dest + " " + src);
         String str = "";
-        str = FileReaderWritter.getCharContents(path);
+        str = FileReaderWritter.getCharContents(path, app);
         // handle multiline comments
         int start = -1;
         int end = -1;
@@ -200,7 +200,7 @@ public class VOImpl {
         }
 
         String tempStr = str.substring(0, str.indexOf("{"));
-        String changed = DirCreator.replaceImports(tempStr);
+        String changed = DirCreator.replaceImports(tempStr, app);
         str = changed + str.substring(str.indexOf("{"));
 
         String destination = FileReaderWritter.getModelDestinationPath(path, app, dest, src);
@@ -208,13 +208,13 @@ public class VOImpl {
         // handle logging
         String name = path.substring(path.lastIndexOf(FileReaderWritter.getSeparator()) + 1);
         String className = name.replace(".java", "");
-        String newMethods = DirCreator.addMethods(className);
+        String newMethods = DirCreator.addMethods(className, app);
         str = str.subSequence(0, str.lastIndexOf("}")).toString();
         str = str + newMethods + "}";
 
-        FileReaderWritter.writeFile(str, destination);
-        
-        DirCreator.replacements(destination);
+        FileReaderWritter.writeFile(str, destination, app);
+
+        DirCreator.replacements(destination, app);
 
         System.out.println("End Conv: handleVODef ");
     }
@@ -224,8 +224,9 @@ public class VOImpl {
      * @param attrVec
      * @return
      */
-    private static String generateEnumeration(Vector attrVec) {
+    private static String generateEnumeration(Vector attrVec, String app) {
         System.out.println("Start Conv: generateEnumeration ");
+        ErrorAndLog.handleLog(app, "Start Conv: generateEnumeration ");
         String strHead = "public enum AttributesEnum {";
 
         String strBody = "";
@@ -252,7 +253,7 @@ public class VOImpl {
         System.out.println("Start Conv: handleVORowInterface " + path + " " + app + " " + dest);
         ErrorAndLog.handleLog(app, "converting " + path);
         String str = "";
-        str = FileReaderWritter.getCharContents(path);
+        str = FileReaderWritter.getCharContents(path, app);
         // handle multiline comments
         int start = -1;
         int end = -1;
@@ -262,17 +263,17 @@ public class VOImpl {
             str = str.replace(str.subSequence(start, end + 2), "");
         }
         String tempStr = str.substring(0, str.indexOf("{"));
-        String changed = DirCreator.replaceImports(tempStr);
+        String changed = DirCreator.replaceImports(tempStr, app);
         str = changed + str.substring(str.indexOf("{"));
         String destination = FileReaderWritter.getModelDestinationPath(path, app, dest, src);
         // handle logging
         String name = path.substring(path.lastIndexOf(FileReaderWritter.getSeparator()) + 1);
         String className = name.replace(".java", "");
-        String newMethods = DirCreator.addMethods(className);
+        String newMethods = DirCreator.addMethods(className, app);
         str = str.subSequence(0, str.lastIndexOf("}")).toString();
         str = str + newMethods + "}";
-        FileReaderWritter.writeFile(str, destination);
-        DirCreator.replacements(destination);
+        FileReaderWritter.writeFile(str, destination, app);
+        DirCreator.replacements(destination, app);
         System.out.println("End Conv: handleVORowInterface ");
     }
 
