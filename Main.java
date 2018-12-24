@@ -69,6 +69,7 @@ public class Main {
         String app = "billetissue"; // change here
         String ret = startConverter(app);
         System.out.println(ret);
+        ErrorAndLog.handleLog(app, ret);
     }
 
     /**
@@ -81,7 +82,7 @@ public class Main {
         String src = obj.getSrc();
         String dest = obj.getDest();
         String repo = obj.getRepo();
-        String returnVal = "";
+        String returnVal = "Error encountered while converting. Please check the " + app + "Errors.txt";
 
         if (null == src || "".equals(src) || "null".equals(src) || null == dest || "".equals(dest) ||
             "null".equals(dest) || null == repo || "".equals(repo) || "null".equals(repo)) {
@@ -96,13 +97,9 @@ public class Main {
                 if ("success".equalsIgnoreCase(ret)) {
                     obj.setSrc(obj.getSrc() + FileReaderWritter.getSeparator() + app);
                     removeFolder(app, "ADF");
-
                     DirCreator.createDir(obj.getApp(), dest, repo);
-
                     obj.readDir(obj.getSrc(), 0);
-
                     removeFolder(app, "OAF");
-
                     System.out.println("End Conv: startConverter ");
                 }
                 returnVal = "Success.";
@@ -115,7 +112,10 @@ public class Main {
                         System.getenv("ADF_DESTINATION") + FileReaderWritter.getSeparator() + app + "Errors.txt";
                     File f = new File(destination);
                     PrintStream ps = new PrintStream(f);
+                    e.printStackTrace();
                     e.printStackTrace(ps);
+                    removeFolder(app, "ADF");
+                    removeFolder(app, "OAF");
                 } catch (Exception ex) {
                     ex.printStackTrace();
                     ErrorAndLog.handleErrors(app, "Error while printing exceptions.");

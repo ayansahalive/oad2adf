@@ -18,8 +18,7 @@ public class ErrorAndLog {
             String dest = System.getenv("ADF_DESTINATION") + FileReaderWritter.getSeparator() + app + "Errors.txt";
             File f = new File(dest);
             if (!f.exists()) {
-                FileReaderWritter.writeFile("Errors for OAF to ADF Conversion of " + app + "\n", dest, app);
-                FileReaderWritter.appendFile(contents, dest, app);
+                FileReaderWritter.writeFile(contents , dest, app);
             } else
                 FileReaderWritter.appendFile(contents, dest, app);
         } catch (Exception e) {
