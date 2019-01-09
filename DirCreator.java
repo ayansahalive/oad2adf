@@ -267,6 +267,13 @@ public class DirCreator {
                                    FileReaderWritter.getSeparator() + "view" + FileReaderWritter.getSeparator() +
                                    "DataBindings.cpx", app);
 
+        JSFGen.createJSF(app,
+                         pathVC + FileReaderWritter.getSeparator() + "public_html" + FileReaderWritter.getSeparator() +
+                         app + "PG.jsf");
+        TFGen.createBTF(app,
+                         pathVC + FileReaderWritter.getSeparator() + "public_html" + FileReaderWritter.getSeparator() +
+                         "WEB-INF" + FileReaderWritter.getSeparator() + "BTF" + app + ".xml");
+
         System.out.println("End Conv: copyVCFiles");
     }
 
@@ -359,9 +366,10 @@ public class DirCreator {
      * @param str
      * @return
      */
-    protected static String replaceImports(String str, String app) {
-        System.out.println("Start Conv: replaceImports " + app);
-        ErrorAndLog.handleLog(app, "Start Conv: replaceImports " + app);
+    protected static String replaceImports(String str,
+                                           String app) {
+        //        System.out.println("Start Conv: replaceImports " + app);
+        //        ErrorAndLog.handleLog(app, "Start Conv: replaceImports " + app);
         str =
             str.replace("import oracle.apps.fnd.framework.server.OAApplicationModuleImpl;",
                         "import oracle.jbo.server.ApplicationModuleImpl;");
@@ -412,7 +420,7 @@ public class DirCreator {
             ;
         }
 
-        System.out.println("End Conv: replaceImports ");
+        //        System.out.println("End Conv: replaceImports ");
         return str;
     }
 

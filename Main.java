@@ -66,7 +66,7 @@ public class Main {
      * @param args
      */
     public static void main(String[] args) {
-        String app = "billetissue"; // change here
+        String app = "inspect"; // change here
         String ret = startConverter(app);
         System.out.println(ret);
         ErrorAndLog.handleLog(app, ret);
@@ -207,6 +207,8 @@ public class Main {
             VLXml.handleVLXml(path, this.getApp(), this.getDest(), this.getRepo(), this.getSrc());
         else if (type.contains("page"))
             JSFGen.handlePage(path, this.getApp(), this.getDest(), this.getRepo(), this.getSrc(), filePaths);
+        else if (type.contains("oa:"))
+            JSFGen.handleRegion(path, this.getApp(), this.getDest(), this.getRepo(), this.getSrc(), filePaths);     
         else if (path.substring(path.lastIndexOf(FileReaderWritter.getSeparator()) + 1).contains("server.xml"))
             ; // do nothing
         else
