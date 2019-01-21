@@ -266,13 +266,45 @@ public class DirCreator {
                                    pathVC + FileReaderWritter.getSeparator() + "adfmsrc" +
                                    FileReaderWritter.getSeparator() + "view" + FileReaderWritter.getSeparator() +
                                    "DataBindings.cpx", app);
+        // util files
+        FileReaderWritter.copyFile(repo + FileReaderWritter.getSeparator() + "util" + FileReaderWritter.getSeparator() +
+                                   "StringUtils.java",
+                                   pathVC + FileReaderWritter.getSeparator() + "src" +
+                                   FileReaderWritter.getSeparator() + "view" + FileReaderWritter.getSeparator() +
+                                   "util" + FileReaderWritter.getSeparator() + "StringUtils.java", app);
+        FileReaderWritter.copyFile(repo + FileReaderWritter.getSeparator() + "util" + FileReaderWritter.getSeparator() +
+                                   "PopupUtils.java",
+                                   pathVC + FileReaderWritter.getSeparator() + "src" +
+                                   FileReaderWritter.getSeparator() + "view" + FileReaderWritter.getSeparator() +
+                                   "util" + FileReaderWritter.getSeparator() + "PopupUtils.java", app);
+        FileReaderWritter.copyFile(repo + FileReaderWritter.getSeparator() + "util" + FileReaderWritter.getSeparator() +
+                                   "OperationUtils.java",
+                                   pathVC + FileReaderWritter.getSeparator() + "src" +
+                                   FileReaderWritter.getSeparator() + "view" + FileReaderWritter.getSeparator() +
+                                   "util" + FileReaderWritter.getSeparator() + "OperationUtils.java", app);
+        FileReaderWritter.copyFile(repo + FileReaderWritter.getSeparator() + "util" + FileReaderWritter.getSeparator() +
+                                   "JSFUtils.java",
+                                   pathVC + FileReaderWritter.getSeparator() + "src" +
+                                   FileReaderWritter.getSeparator() + "view" + FileReaderWritter.getSeparator() +
+                                   "util" + FileReaderWritter.getSeparator() + "JSFUtils.java", app);
+        FileReaderWritter.copyFile(repo + FileReaderWritter.getSeparator() + "util" + FileReaderWritter.getSeparator() +
+                                   "AmisUtils.java",
+                                   pathVC + FileReaderWritter.getSeparator() + "src" +
+                                   FileReaderWritter.getSeparator() + "view" + FileReaderWritter.getSeparator() +
+                                   "util" + FileReaderWritter.getSeparator() + "AmisUtils.java", app);
+        FileReaderWritter.copyFile(repo + FileReaderWritter.getSeparator() + "util" + FileReaderWritter.getSeparator() +
+                                   "ADFUtils.java",
+                                   pathVC + FileReaderWritter.getSeparator() + "src" +
+                                   FileReaderWritter.getSeparator() + "view" + FileReaderWritter.getSeparator() +
+                                   "util" + FileReaderWritter.getSeparator() + "ADFUtils.java", app);
 
+        //
         JSFGen.createJSF(app,
                          pathVC + FileReaderWritter.getSeparator() + "public_html" + FileReaderWritter.getSeparator() +
                          app + "PG.jsf");
         TFGen.createBTF(app,
-                         pathVC + FileReaderWritter.getSeparator() + "public_html" + FileReaderWritter.getSeparator() +
-                         "WEB-INF" + FileReaderWritter.getSeparator() + "BTF" + app + ".xml");
+                        pathVC + FileReaderWritter.getSeparator() + "public_html" + FileReaderWritter.getSeparator() +
+                        "WEB-INF" + FileReaderWritter.getSeparator() + "BTF" + app + ".xml");
 
         System.out.println("End Conv: copyVCFiles");
     }

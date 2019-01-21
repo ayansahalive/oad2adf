@@ -83,31 +83,35 @@ public class JSFGen {
             }
             if (strAttr.equals("controllerClass")) {
                 jsfBeanName = currentAtt.getNodeValue();
-                String temp = currentAtt.getNodeValue();
-                temp = temp.replace(".", FileReaderWritter.getSeparator());
+                String temp = jsfBeanName.replace(".", FileReaderWritter.getSeparator());
                 coName += temp + ".java";
             }
         }
+        
+        jsfBeanName = jsfBeanName.substring(jsfBeanName.lastIndexOf(".")+1);
+
         String beanPath =
             destination.substring(0, destination.indexOf("ViewController") + 14) + FileReaderWritter.getSeparator() +
-            "src" + FileReaderWritter.getSeparator() + "view" + FileReaderWritter.getSeparator() +
-            jsfBeanName.replace(".", FileReaderWritter.getSeparator()) + ".java";
+            "src" + FileReaderWritter.getSeparator() + "view" + FileReaderWritter.getSeparator() +"backing"+FileReaderWritter.getSeparator()+
+            jsfBeanName + ".java";
         DocumentBuilderFactory newDbFactory = DocumentBuilderFactory.newInstance();
         newDbFactory.setValidating(false);
         DocumentBuilder newDBuilder = newDbFactory.newDocumentBuilder();
         Document jsfDoc = newDBuilder.newDocument();
 
         Element headerNode = createJSFF(pgName, jsfDoc, app);
-        BeanGen.createBean(pgName, beanPath, app);
+
+        BeanGen.createBean(jsfBeanName, beanPath, app);
 
         if (nodes.getLength() > 0) {
             recursiveNodes(nodes, jsfDoc, Dest, app, pgName, amDef, jsfBeanName, src, filePaths, headerNode, beanPath);
         }
 
         FileReaderWritter.writeXMLFile(jsfDoc, pagePath, app);
-        String beanCompletePath = "view." + jsfBeanName;
-        BeanGen.createAdfConfig(destination.substring(0, destination.indexOf("ViewController") + 14), pgName,
-                                beanCompletePath, app);
+
+        BeanGen.createAdfConfig(destination.substring(0, destination.indexOf("ViewController") + 14), jsfBeanName,
+                                "view.backing." + jsfBeanName, app);
+
         BeanGen.copyProcessFormRequest(path, app, beanPath, coName);
 
         System.out.println("End Conv: handlePage");
@@ -126,11 +130,11 @@ public class JSFGen {
      */
     protected static void handleRegion(String path, String app, String Dest, String repo, String src,
                                        Map filePaths) throws Exception {
-        System.out.println("Start Conv: handlePage " + path + " " + app + " " + Dest + " " + repo + " " + src + " " +
+        System.out.println("Start Conv: handleRegion " + path + " " + app + " " + Dest + " " + repo + " " + src + " " +
                            filePaths);
         ErrorAndLog.handleLog(app,
-                              "Start Conv: handlePage " + path + " " + app + " " + Dest + " " + repo + " " + src + " " +
-                              filePaths);
+                              "Start Conv: handleRegion " + path + " " + app + " " + Dest + " " + repo + " " + src +
+                              " " + filePaths);
         String pgName = path.substring(path.lastIndexOf(FileReaderWritter.getSeparator()) + 1);
         pgName = pgName.replace(".xml", "");
         String destination = FileReaderWritter.getViewDestinationPath(path, app, Dest, src);
@@ -164,33 +168,63 @@ public class JSFGen {
                 }
                 if (strAttr.equals("controllerClass")) {
                     jsfBeanName = currentAtt.getNodeValue();
-                    String temp = currentAtt.getNodeValue();
-                    temp = temp.replace(".", FileReaderWritter.getSeparator());
-                    coName += temp + ".java";
+                    if (!"".equals(jsfBeanName)) {
+                        String temp = jsfBeanName.replace(".", FileReaderWritter.getSeparator());
+                        coName += temp + ".java";
+                    }
                 }
             }
         }
-        String beanPath =
-            destination.substring(0, destination.indexOf("ViewController") + 14) + FileReaderWritter.getSeparator() +
-            "src" + FileReaderWritter.getSeparator() + "view" + FileReaderWritter.getSeparator() +
-            jsfBeanName.replace(".", FileReaderWritter.getSeparator()) + ".java";
+        
+
+        String beanPath = "";
+        if (!"".equals(jsfBeanName)) {
+            jsfBeanName = jsfBeanName.substring(jsfBeanName.lastIndexOf(".")+1);
+            beanPath =
+                destination.substring(0, destination.indexOf("ViewController") + 14) +
+                FileReaderWritter.getSeparator() + "src" + FileReaderWritter.getSeparator() + "view" + 
+                FileReaderWritter.getSeparator() + "backing" + FileReaderWritter.getSeparator() +
+                jsfBeanName+".java";
+        } else {
+            beanPath =
+                destination.substring(0, destination.indexOf("ViewController") + 14) +
+                FileReaderWritter.getSeparator() + "src" + FileReaderWritter.getSeparator() + "view" +
+                FileReaderWritter.getSeparator() + "backing" + FileReaderWritter.getSeparator() + pgName + ".java";
+        }
+
+
         DocumentBuilderFactory newDbFactory = DocumentBuilderFactory.newInstance();
         newDbFactory.setValidating(false);
         DocumentBuilder newDBuilder = newDbFactory.newDocumentBuilder();
         Document jsfDoc = newDBuilder.newDocument();
 
         Element headerNode = createJSFF(pgName, jsfDoc, app);
-        BeanGen.createBean(pgName, beanPath, app);
+
+        if (!"".equals(jsfBeanName))
+            BeanGen.createBean(jsfBeanName, beanPath, app);
+        else
+            BeanGen.createBean(pgName, beanPath, app);
 
         if (nodes.getLength() > 0) {
             recursiveNodes(nodes, jsfDoc, Dest, app, pgName, amDef, jsfBeanName, src, filePaths, headerNode, beanPath);
         }
 
         FileReaderWritter.writeXMLFile(jsfDoc, pagePath, app);
-        String beanCompletePath = "view." + jsfBeanName;
-        BeanGen.createAdfConfig(destination.substring(0, destination.indexOf("ViewController") + 14), pgName,
-                                beanCompletePath, app);
-        if(!"".equals(jsfBeanName))
+
+        String className = "";
+        if (!"".equals(jsfBeanName))
+            className = jsfBeanName.substring(jsfBeanName.lastIndexOf("."));
+        else
+            className = pgName;
+        
+        if (!"".equals(jsfBeanName))
+        BeanGen.createAdfConfig(destination.substring(0, destination.indexOf("ViewController") + 14), className,
+                                "view.backing."+jsfBeanName, app);
+        else
+            BeanGen.createAdfConfig(destination.substring(0, destination.indexOf("ViewController") + 14), className,
+                                    "view.backing."+pgName, app);
+
+        if (!"".equals(jsfBeanName))
             BeanGen.copyProcessFormRequest(path, app, beanPath, coName);
 
         System.out.println("End Conv: handlePage");
@@ -282,7 +316,7 @@ public class JSFGen {
             retElement = convertButton(currentNode, jsfDoc, pgName, path, isTableComp, app);
         } else if (strElement.equals("oa:submitButton")) { // when none match
             retElement = convertSubmitButton(currentNode, jsfDoc, pgName, path, isTableComp, app);
-        }/* else if (strElement.equals("oa:messageLovInput")) {
+        } /* else if (strElement.equals("oa:messageLovInput")) {
             retElement =
                 convertMessageLovInput(currentNode, jsfDoc, Dest, app, src, pgName, amDef, path, filePaths,
                                        isTableComp);
@@ -385,7 +419,7 @@ public class JSFGen {
 
         facetElement5.setAttribute("name", "info");
 
-        FileReaderWritter.writeXMLFile(jsfDoc, destination , app);
+        FileReaderWritter.writeXMLFile(jsfDoc, destination, app);
 
         System.out.println("End Conv: createJSF ");
     }
@@ -821,6 +855,7 @@ public class JSFGen {
      * @return
      * @throws Exception
      */
+    /*
     protected static Element convertMessageLovInput(Node currentNode, Document jsfDoc, String Dest, String app,
                                                     String src, String pgName, String amDef, String beanPath,
                                                     Map filePaths, boolean isTableComp) throws Exception {
@@ -957,7 +992,7 @@ public class JSFGen {
 
         System.out.println("End Conv: convertMessageLovInput ");
         return retElement;
-    }
+    } */
 
     /**
      *
@@ -973,7 +1008,7 @@ public class JSFGen {
      * @return
      * @throws Exception
      */
-    protected static Element convertMessageChoice(Node currentNode, Document jsfDoc, String Dest, String app,
+    /*protected static Element convertMessageChoice(Node currentNode, Document jsfDoc, String Dest, String app,
                                                   String pgName, String amDef, String beanPath, Map filePaths,
                                                   boolean isTableComp) throws Exception {
         System.out.println("Start Conv: convertMessageChoice " + Dest + " " + app + " " + pgName + " " + amDef + " " +
@@ -1033,7 +1068,7 @@ public class JSFGen {
         }
         System.out.println("End Conv: convertMessageChoice ");
         return retElement;
-    }
+    }*/
 
     /**
      *
@@ -1599,7 +1634,7 @@ public class JSFGen {
         ErrorAndLog.handleLog(app, "Start Conv: convertCheckBox " + beanPath + " " + isTableComp + " " + app);
         String itemName = "";
         String itemType = "RichSelectManyCheckbox";
-        String imports = "import oracle.adf.view.rich.component.rich.output.RichSelectManyCheckbox;";
+        String imports = "import oracle.adf.view.rich.component.rich.input.RichSelectManyCheckbox;";
 
         Element retElement = jsfDoc.createElement("af:selectManyCheckbox");
         NamedNodeMap attrs = currentNode.getAttributes();

@@ -23,26 +23,18 @@ public class BeanGen {
      * @param app
      * @throws Exception
      */
-    protected static void createBean(String pgName, String pathVC, String app) throws Exception {
-        System.out.println("Start Conv: createBean " + pgName + " " + pathVC + " " + app);
-        ErrorAndLog.handleLog(app, "Start Conv: createBean " + pgName + " " + pathVC + " " + app);
+    protected static void createBean(String jsfBeanName, String beanPath, String app) throws Exception {
+        System.out.println("Start Conv: createBean " + jsfBeanName + " " + beanPath + " " + app);
+        ErrorAndLog.handleLog(app, "Start Conv: createBean " + jsfBeanName + " " + beanPath + " " + app);
+        String className = jsfBeanName.substring(jsfBeanName.lastIndexOf(".")+1);
         String bean =
-            "package view.backing;\n" + "" + "import oracle.adf.view.rich.component.rich.RichDocument;\n" +
-            "import oracle.adf.view.rich.component.rich.RichForm;\n" +
-            "import oracle.adf.view.rich.component.rich.layout.RichPanelHeader;\n" +
-            "import oracle.adf.view.rich.component.rich.output.RichSeparator;\n" + "public class " + pgName +
-            "Bean {\n" + "private RichForm f1;\n" + "    private RichDocument d1;\n" +
-            "    private RichPanelHeader ph1;\n" + "    private RichSeparator s1;\n\n" + "" +
-            "    public void setF1(RichForm f1) {\n" + "        this.f1 = f1;\n" + "    }\n\n" + "" +
-            "    public RichForm getF1() {\n" + "        return f1;\n" + "    }\n\n" + "" +
-            "    public void setD1(RichDocument d1) {\n" + "        this.d1 = d1;\n" + "    }\n\n" + "" +
-            "    public RichDocument getD1() {\n" + "        return d1;\n" + "    }\n\n" + "" +
-            "    public void setPh1(RichPanelHeader ph1) {\n" + "        this.ph1 = ph1;\n" + "    }\n\n" + "" +
-            "    public RichPanelHeader getPh1() {\n" + "        return ph1;\n" + "    }\n\n" + "" +
-            "    public void setS1(RichSeparator s1) {\n" + "        this.s1 = s1;\n" + "    }\n\n" + "" +
-            "    public RichSeparator getS1() {\n" + "        return s1;\n" + "    }\n" + "}";
+            "package view.backing;" +
+            "import view.util.*;"+
+            "public class " + className +
+            "{}";
 
-        FileReaderWritter.writeFile(bean, pathVC, app);
+        FileReaderWritter.writeFile(bean, beanPath, app);
+        
         System.out.println("End Conv: createBean ");
     }
 
@@ -190,9 +182,9 @@ public class BeanGen {
         Element root = doc.getDocumentElement();
 
         Element bean = doc.createElement("managed-bean");
-        bean.setAttribute("id", pgName + "Bean");
+        bean.setAttribute("id", pgName);
         Element beanName = doc.createElement("managed-bean-name");
-        beanName.setTextContent(pgName + "Bean");
+        beanName.setTextContent(pgName);
         Element beanClass = doc.createElement("managed-bean-class");
         beanClass.setTextContent(beanPath);
         Element beanScope = doc.createElement("managed-bean-scope");
@@ -211,7 +203,7 @@ public class BeanGen {
     }
 
     /**
-     * Copy OAF CO PFR
+     * Copy OAF CO completely
      * @param path
      * @param app
      * @param beanPath
